@@ -4,15 +4,17 @@ library(shinyvalidate)
 library(shinyWidgets)
 library(shinyalert)
 library(purrr)
+library(seqinr)
+library(colourpicker)
+
+library(httpuv)
 
 library(BiocManager)
 options(repos = BiocManager::repositories())
 
-## TODO cambiar a libreria
-source('IRscope.R') #source('/home/dmcarmen/Desktop/IRscope_Chloroplot/IRscope/IRscope.R')
-pkgload::load_all(path = "Chloroplot") #pkgload::load_all(path = "/home/dmcarmen/Desktop/IRscope_Chloroplot/IRscope/Chloroplot")
+pkgload::load_all(path = "IRscope")
 
-## AUXILIAR FUNCTIONS TODO move
+#### AUXILIAR FUNCTIONS ####
 rowInputGB <- function(x) {
   fluidRow(column(width = 2, 
                   textInput(inputId = paste0("acc",x), label = "Accession No.", 
@@ -20,7 +22,7 @@ rowInputGB <- function(x) {
            column(width = 3,
                   fileInput(inputId = paste0("data",x), label = "GeneBank File",
                             placeholder = "or GB file")),
-           # TODO
+           # TODO: remove files.
            # column(width = 2, actionButton(paste0("removefile",x), "Remove", icon = icon("trash"))),
            column(width = 5, br(), verbatimTextOutput(paste0("sp",x), placeholder = TRUE)), 
            column(width = 1, strong("SSC"), br(), 
@@ -33,7 +35,7 @@ rowInputManual <- function(x) {
   fluidRow(br(), 
            column(width = 3, 
                   fileInput(inputId = paste0("dogma",x), label = "Annotations", 
-                            placeholder = paste0(x,"th Annotation ..."))),
+                            placeholder = paste0(x," Annotation ..."))),
            column(width = 3, 
                   fileInput(inputId = paste0("fas",x), label = "Genome Fasta", 
                             placeholder = "And Fasta file")), 
@@ -44,18 +46,19 @@ rowInputManual <- function(x) {
   )
 }
 
-# # TEST
-# # Make a palette of 40 colors
-# colors <- rainbow(40, alpha = NULL)
-# # Mirror the rainbow, so we cycle back and forth smoothly
-# colors <- c(colors, rev(colors[c(-1, -40)]))
-# # TEST
-# TODO 
-# urlToGetAllOpenBugs = "https://api.github.com/repos/jquery/jquery/issues?state=open&labels=bug";
+printIssue <- function(issue) {
+  column(width = 6,
+    h4(paste0(issue$number,'.'), tags$a(href=issue$html_url, issue$title)),
+    br()
+  )
+  # p("some text", style = "color:red)
+}
 
+#### UI SECTION ####
 ui <- fluidPage(
   br(),
   useShinyalert(),
+  shinyjs::useShinyjs(),
   HTML('<!DOCTYPE html>
        <html>
        <head>
@@ -72,14 +75,13 @@ ui <- fluidPage(
        <div style="padding:20px;border-radius:300px;border:20px solid #1E8449";">
        <div style="opacity:0.3;position:absolute;background-color:#8E44AD"></div>
        
-       <h1 style="font-family:Copperplate Gothic Bold;letter-spacing:8px;text-align:center;">IRSCOPE</h1>
+       <h1 style="font-family:Copperplate Gothic Bold;letter-spacing:8px;text-align:center;">IIRSCOPE</h1>
        <h4 style = "font-family:Charlesworth;text-align:center;color:navy;"><em> Tool for visualizing the junction sites of the chloroplast genome </em> </h4>
 
        </div>
        </body>
        </html>
        '),
-  
   # tags$h1(style = "font-family:Copperplate Gothic Bold", "IRSCOPE"),
   #tags$h4(style = "font-family:Charlesworth", tags$em("Tools for analyzing and visualizing the chloroplast genomes.")),
   #tags$hr(),
@@ -88,104 +90,409 @@ ui <- fluidPage(
     tags$head(tags$style("#StatusGB{color: white;
                          background: lightslategrey;
                          white-space: pre-wrap;}")),
-    # # TEST TODO
-    # tags$script('$(document).ready(function () {
-    #   $.getJSON(urlToGetAllOpenBugs, function (allIssues) {
-    #     $("div").append("found " + allIssues.length + " issues</br>");
-    #     $.each(allIssues, function (i, issue) {
-    #       $("div")
-    #       .append("<b>" + issue.number + " - " + issue.title + "</b></br>")
-    #       .append("created at: " + issue.created_at + "</br>")
-    #       .append(issue.body + "</br></br></br>");
-    #     });
-    #   });
-    # });'),
-    # # TEST
+    tags$head(tags$style("#Status{color: white;
+                         background: lightslategrey;
+                         white-space: pre-wrap;}")),
     ),
   
-  #navlistPanel(widths = c(1, 11), well = FALSE,
-  # tabPanel("Home",column(width = 6, h4(tags$em("Welcome to IRscope...")), br(), p(tags$strong("Chloroscope"),  "is a suit for analyzing and visualazing the chloroplast genomes. The tools can be found in the 'Tools' tab. Currently only the IRScope is a functional program of the website and the more information related to that can be found in the related pages."))),
-  #tabPanel("Tools",
-  fluidRow(column(width = 1, ""), column(width = 11, offset = 1,
-                                         tabsetPanel(
-                                           tabPanel(strong("Home"), br(),
-                                                    column( width=6, h4(tags$em("Welcome to IRscope...")), br(), tags$p(strong("IRscope"),"is a tool for  visualizing the genes on the boundaries of the junction sites of the chloroplast genome. The input files can be uploaded using the 'Files upload' tab. After the submission, the program will start searching the", tags$em("Inverted Repeat"), "regions. Note that the species selected will lead to a consensus radius for each junction site for the genes to be plotted. This indicates that if the input files are not representing closely related species, the program may lead to unsatisfactory result. Finally note that the input files can be either manual annotations, GeneBank accession numbers, or related GB files of the chloroplast genomes.")
-                                                    )),
-                                           tabPanel("Files upload", br(), fluidRow(column(width = 11, br(), p("You need to provide information related to at least two species for the analysis to proceed. After you have successfully provided your input files, press the 'Submit' button. This will activate its following box. Be patient till you are communicated through that box on how to proceed for downloading your output. Also note that the computations may take up to five minutes. Please be patient. For running the analysis, one can use either of the following cases."), strong("1. GB Files"), p("In this method, you can provide the GB files or the accession number of the related species to obtain the IR plot. This function is active under the 'GB File' tab"),  strong("2. Manual Files"),p("This method is useful for the times when  simple tabular format of the annotations, the genome sequences of the targeted species, and possibly their corresponding inverted repeat regions boundary coordinates are available. This function is active under 'Manual Files' tab."),  p("Further instructions for each case is given specifically under relevant tab."))),
-                                                    br(), br(),br(),
-                                                    tabsetPanel(
-                                                      tabPanel("GB File", br(), br(), 
-                                                               p("In this section you can upload either your GeneBank files or provide their corresponding accession numbers if applicable. You can denote if you want to depict the SSC region in the reverse order by ticking the 'SSC', box for a corresponding input file.",
-                                                                 br(), br(), "For example, you can test the program with these accession numbers:"), tags$em("NC_007898, NC_008096"), br(), br(),
-                                                               
-                                                               numericInput("nGB", "Number of GB files (min 1, max 20):", 2, min = 1, max = 20),
-                                                               uiOutput("dynUIGB"), # columns displayed depending on the numericInput above
-                                                               column(width=10,verbatimTextOutput("stat"), actionButton("Gbsub", "Submit"), 
-                                                                      br(), br(), p("After submission the section below will turn innactive, meaning that analysis is in process. Be patient until you are prompted to download your plot."),
-                                                                      verbatimTextOutput("StatusGB", placeholder = TRUE), br(), verbatimTextOutput("StatusGB2", placeholder = FALSE), 
-                                                                      radioButtons("file_type", "Please choose a format to download the plot.",
-                                                                                   choices = c("pdf", "png", "jpeg","bmp", "tiff"), inline=TRUE),
-                                                                      downloadButton(outputId = "downloadData", label = "Download"),
-                                                                      # plotOutput("Plot"),
-                                                                      ),
-                                                               ),
-                                                      tabPanel("Manual Files", br(), 
-                                                               p("In case your GB files are of low quality or otherwise not available and still you would like to obtain the plot, you can provide your annotations as a simple tabular format (primary", 
-                                                                 tags$a("DOGMA", href="https://dogma.ccbb.utexas.edu"), "output) beside their genomes in fasta format and proceed to obtain the plot. In case you also have the values for the junction sites coordinates, you can provide them on the 'IR info' section as JLB, JSB, JSA, and JLA respectively. This decreases the processing time dramatically and would be useful in cases where for example the IR regions are not identical.", 
-                                                                 br(), br(), "A minimal example of a annotation input can be like", 
-                                                                 downloadLink('downloadDogma', 'this'), "file."),
-                                                               
-                                                               numericInput("nManual", "Number of GB files (min 1, max 20):", 2, min = 1, max = 20),
-                                                               uiOutput("dynUIManual"), # columns displayed depending on the numericInput above
-                                                               column(width=10, actionButton("Go", "Submit"), br(), br(), p("After submission the section below will turn innactive, meaning that analysis is in process. Be patient until you are prompted to download your plot."), verbatimTextOutput("Status", placeholder = TRUE), br(), verbatimTextOutput("Status2", placeholder = FALSE), downloadButton("Down","Download file")))
-                                                    )),
-                                           tabPanel("FAQ", br(), column(width = 1, ""), br(), column(width = 6, h4(strong("Q:"), tags$em(strong("Why the gene names are not displayed properly?"))), p(strong("A:"),"Check your input file(s), IRscope is based on the gene names specified in them."), br(),
-                                                                                                     h4(strong("Q:"), tags$em(strong("Why some of the genes are extended to the large portion of the tracks?"))), p(strong("A:"),"This is due to the bad annotation implemented in the input file(s). Often this is related to the genes with introns or trans-spliced genes like rps12. Check and fix your input files."), br(),
-                                                                                                     h4(strong("Q:"), tags$em(strong("I have a well annotated genome but not getting the plot?"))), p(strong("A:"),"IRscope can handle the redundant base pairs but if the sequence is of a very poor quality the program may fail in detecting the inverted regions and hence not produce any output."), br(),
-                                                                                                     # h4(strong("Q:"), tags$em(strong("I see genes overplotting on each other, how can I fix this?"))), p(strong("A:"),"This is mostly because at least one of your species differs significantly from the rest so that it creates too large radius for finding the genes in the vicinity of the junction site and consequently causes the populated genes in these respective areas. Try reducing the species sampling to a smaller group of more closely related species."), br(),
-                                                                                                     h4(strong("Q:"), tags$em(strong("There is a warning about the spacing around the junction not being in scale. Why?"))), p(strong("A:"),"If at least one of your species differs significantly from the rest so that it creates too large radius for finding the genes in the vicinity of the junction site, the radius in that junction will adapt to each of the species best, instead of using the same radius. Try reducing the species sampling to a smaller group of more closely related species."), br(),
-                                                                                                     h4(strong("Q:"), tags$em(strong("Can I modify and run the codes on my own computer?"))), p(strong("A:"),"Yes, please download the file in the 'About' section, run the whole script in your R session. This will set up a pseudo web interface on your computer which resemles and works exactly like the online version. You can further tune the functions as you wish." ), br(),
-                                                                                                     # h4(strong("Q:"), tags$em(strong("My analysis runs slow. Can I enhance its speed?"))), p(strong("A:"),"Yes, after downloading the file in the 'About' section, alter the 'parallel' arguments of the function 'IRinfo' into 'TRUE'. Then run the whole code on your R console. This will launch an instance with default 4 CPUs. If your machine is equipped with more cores, you can increase the number of CPUs with the 'nCPU' in 'p.d' subfunction inside the 'IRinfo' function."), br(),
-                                                                                                     h4(strong("Q:"), tags$em(strong("What should be the format of the annotation files in the 'Manual Files' section?"))), p(strong("A:"),"This should be a plain text format (.txt) of the four tab separated columns, as start of the gene, end of the gene, its name, and the direction of it (+ or -). Note that the file needs to be without header." ), br(),
-                                                                                                     h4(strong("Q:"), tags$em(strong("My species names are not plotted correctly, why?"))), p(strong("A:"),"The genome names in the 'GB Files' are read from the 'Organism' line of the file while the first space separated text of the genomes first line in the manual part is a determinant of species name in this section. In the 'Manual Files' section, the names are read from the first line after the '>' of the fasta file uploaded. Please edit them if they do not follow your expectations and rerun." ), br(),
-                                                                                                     h4(strong("Q:"), tags$em(strong("My analysis took excessively long time and even after that the plot is of an overall low quality, why is that?"))), p(strong("A:"),"The IRscope is primarily optimized for the angiosperms and it often turns reliable results for other seed plants as well. However, further departure from the Embryophyta will extend this program to its limits. In such cases, you may want to consider use of the manual section with providing the the IR coordinates." ), br(),
-                                                                                                     h4(strong("Q:"), tags$em(strong("How can I cite the program"))), p(strong("A:"), "The paper describing this web app in detail with the title", tags$em("IRscope: An online program to visualize the junction sites of chloroplast genomes"), "is", tags$a(href="https://doi.org/10.1093/bioinformatics/bty220", "published"), "in", tags$em("Bioinformatics"), "journal. Please, cite the paper when you use the program."), br()
-                                                                                                     
-                                           )),
-                                           tabPanel("About", br(), column(width = 6, p("IRscope and its all dependencies are coded in R. The detailed instruction on how to use each subfuction is provided as well. Also the accession numbers that used to test and train the program are listed at the end of the file.", "Click", downloadLink('downloadDat', 'here'), "to download the file after which, you can run all the codes (apart from accession numbers) into your R Console to obtain this app on your PC. Here are two example outputs of the program:" , downloadLink('downloadPIC1', 'example1'), "and", downloadLink('downloadPIC2', 'example2'), "."))),
-                                           tabPanel("Contact", br(), column(width = 6, p("The paper describing this web app in detail with the title", tags$em("IRscope: An online program to visualize the junction sites of chloroplast genomes"), "is", tags$a(href="https://doi.org/10.1093/bioinformatics/bty220", "published"),"in", tags$em("Bioinformatics"), "journal. Please cite that papers in all your correspondence. In case of practical issues please consult the FAQ sections first or email us at", tags$em("ali(dot)amiryousefi@helsinki(dot)fi."))))
-                                         )
-  )
-  ))
+  fluidRow(column(width = 1, ""), 
+           column(width = 11, offset = 1,
+                 tabsetPanel(
+                   tabPanel(strong("Home"), br(),
+                            tags$div(includeMarkdown("./documents/home.md"), style = "max-width:800px;")),
+                   tabPanel("Files upload", br(),
+                            tags$div(includeMarkdown("./documents/file_upload.md"), style = "max-width:800px;"),
+                            br(), br(), br(),
+                            tabsetPanel(
+                              tabPanel("GB File", br(), br(), 
+                                       tags$div(includeMarkdown("./documents/gbfiles.md"), style = "max-width:800px;"),
+                                       br(), br(),
+                                       numericInput("nGB", "Number of GB files (min 1, max 20):", 2, min = 1, max = 20),
+                                       uiOutput("dynUIGB"), # columns displayed depending on the numericInput above
+                                       column(width=10,verbatimTextOutput("stat"), actionButton("Gbsub", "Submit"), 
+                                              br(), br(), p("After submission the section below will turn innactive, meaning that analysis is in process. Be patient until you are prompted to download your plot."),
+                                              verbatimTextOutput("StatusGB", placeholder = TRUE), br(), verbatimTextOutput("StatusGB2", placeholder = FALSE), 
+                                              radioButtons("file_type", "Please choose a format to download the plot.",
+                                                           choices = c("pdf", "png", "jpeg","bmp", "tiff"), inline=TRUE),
+                                              downloadButton(outputId = "downloadData", label = "Download"),
+                                              ),
+                                       ),
+                              tabPanel("Manual Files", br(),
+                                       tags$div(includeMarkdown("./documents/dogma.md"), style = "max-width:800px;"),
+                                       br(), br(), p("A minimal example of a annotation input can be like", 
+                                         downloadLink('downloadDogma', 'this'), "file."), # TODO: this file is not there.
+                                       numericInput("nManual", "Number of GB files (min 1, max 20):", 2, min = 1, max = 20),
+                                       uiOutput("dynUIManual"), # columns displayed depending on the numericInput above
+                                       column(width=10, actionButton("Go", "Submit"),
+                                              br(), br(), p("After submission the section below will turn innactive, meaning that analysis is in process. Be patient until you are prompted to download your plot."),
+                                              verbatimTextOutput("Status", placeholder = TRUE), br(), verbatimTextOutput("Status2", placeholder = FALSE), 
+                                              radioButtons("file_typeD", "Please choose a format to download the plot.",
+                                                           choices = c("pdf", "png", "jpeg","bmp", "tiff"), inline=TRUE),
+                                              downloadButton("Down","Download file"))
+                                       ),
+                              tabPanel("Coloring", br(),
+                                       fluidRow(column(4, p("Here you can choose a color palette and see a preview below when you have submitted your data."),
+                                                       #HTML('<div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>'),
+                                                       radioButtons("themes", "Pre-made themes",
+                                                                    choiceNames = list(tags$div(HTML('<svg t="1587725036717" class="icon" viewBox="0 0 1720 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6984" width="18" height="18">
+                                                                                    <path d="M809.044117 921.8048c-332.630953 0-621.012834-185.947823-762.813308-457.443852v-0.813776C186.505452 195.102804 469.902955 10.375644 797.752974 6.205042h22.582285c328.053463 
+                                                                                    4.170602 611.552688 189.101205 751.72561 457.749018-141.698752 271.699473-430.182355 457.85074-763.016752 457.85074zM666.022979 180.658279c-79.037997 0-143.12286 61.541812-143.122859 
+                                                                                    137.324705 0 75.884615 64.084863 137.426427 143.122859 137.426428 78.936275 0 143.021138-61.541812 143.021138-137.426428 0-75.782893-64.084863-137.324705-143.021138-137.324705z m519.29083 
+                                                                                    68.255465a618.26634 618.26634 0 0 0-17.699628-10.375645c14.851413 39.06125 22.989173 81.275881 22.989173 125.219787 0 202.325066-170.791245 366.300936-381.559237 366.300937-210.66627 
+                                                                                    0-381.559237-163.97587-381.559237-366.300937 0-43.943906 8.239482-86.158537 23.090895-125.219787a711.748862 711.748862 0 0 0-240.470818 225.415961 712.867804 712.867804 0 0 0 222.771189 
+                                                                                    215.040317 719.683178 719.683178 0 0 0 376.167971 105.383996 719.7849 719.7849 0 0 0 376.269692-105.383996 713.579858 713.579858 0 0 0 222.669467-215.040317 711.443696 711.443696 0 0 
+                                                                                    0-222.669467-215.040316z" fill="#515151" p-id="6985"></path></svg>
+                                                                                Default')),
+                                                                                       tags$div(HTML('<svg id="Capa_1" enable-background="new 0 0 512 512" height="20" viewBox="0 0 512 512" width="18" xmlns="http://www.w3.org/2000/svg">
+                                                                                    <g><g><g><path d="m256 39.035c120.059 0 179.928 53.893 248.5 143.485-47.07 71.237-123.889 143.485-248.5 143.485-127 0-201.43-72.244-248.5-143.485 52.349-76.08 124.25-143.485 248.5-143.485z" 
+                                                                                    fill="#ffddce"/><path d="m256 326.005c-106.199 0-198.903-57.711-248.5-143.485 49.598-85.774 142.302-143.485 248.5-143.485-129.649 0-212.385 211.03 0 286.97z" fill="#ffcbbe"/><path 
+                                                                                    d="m470.41 182.52c-42.789 53.55-122.78 89.592-214.41 89.592-36.798 0-71.718-5.82-103.099-16.24-46.779-15.531-85.701-41.3-111.311-73.352 23.438-29.319 58.016-53.392 99.573-69.168 9.773-3.721
+                                                                                    19.949-6.979 30.442-9.736 26.342-6.918 54.758-10.688 84.395-10.688s58.053 3.77 84.395 10.688c55.088 14.457 101.062 42.679 130.015 78.904z" fill="#f9f6f9"/><path d="m152.901 
+                                                                                    255.873c-46.779-15.532-85.701-41.301-111.311-73.353 23.438-29.319 58.016-53.392 99.573-69.168-21.645 42.618-22.389 96.596 11.738 142.521z" fill="#dddaec"/><path d="m346.886 
+                                                                                    137.4c0 50.195-40.691 90.886-90.886 90.886s-90.886-40.691-90.886-90.886c0-11.945 2.306-23.341 6.491-33.785 19.351-5.088 39.824-8.468 61.079-9.895 7.674-.525 15.459-.793 
+                                                                                    23.316-.793s15.642.268 23.316.793c21.254 1.428 41.728 4.807 61.079 9.895 4.185 10.444 6.491 21.84 6.491 33.785z" fill="#c0976f"/><path d="m305.525 137.4c0 27.355-22.182 
+                                                                                    49.524-49.524 49.524s-49.524-22.169-49.524-49.524c0-18.912 10.615-35.347 26.208-43.68 7.674-.525 15.459-.793 23.316-.793s15.642.268 23.316.793c15.592 8.333 26.208 
+                                                                                    24.768 26.208 43.68z" fill="#407093"/></g><circle cx="111.102" cy="416.434" fill="#ffe07d" r="56.532"/><path d="m127.06 470.674c-5.06 1.49-10.42 2.29-15.96 2.29-31.22
+                                                                                    0-56.53-25.31-56.53-56.53 0-31.23 25.31-56.54 56.53-56.54 5.54 0 10.9.8 15.96 2.29-23.46 6.88-40.58 28.56-40.58 54.25 0 25.68 17.12 47.36 40.58 54.24z" fill="#f1cb86"/>
+                                                                                    <circle cx="256" cy="416.434" fill="#df75a5" r="56.532"/><path d="m271.958 470.674c-5.06 1.49-10.42 2.29-15.96 2.29-31.22 0-56.53-25.31-56.53-56.53 0-31.23 25.31-56.54 
+                                                                                    56.53-56.54 5.54 0 10.9.8 15.96 2.29-23.46 6.88-40.58 28.56-40.58 54.25 0 25.68 17.12 47.36 40.58 54.24z" fill="#dd5790"/><circle cx="400.898" cy="416.434" fill="#bed8fb"
+                                                                                    r="56.532"/><path d="m416.856 470.674c-5.06 1.49-10.42 2.29-15.96 2.29-31.22 0-56.53-25.31-56.53-56.53 0-31.23 25.31-56.54 56.53-56.54 5.54 0 10.9.8 15.96 2.29-23.46 
+                                                                                    6.88-40.58 28.56-40.58 54.25 0 25.68 17.12 47.36 40.58 54.24z" fill="#9dc6fb"/></g><g><path d="m510.992 178.766c-25.419-43.957-61.973-80.824-105.707-106.615-45.063-26.575-96.685-40.621-149.285-40.621-59.446 
+                                                                                    0-116.719 17.637-165.627 51.005-3.422 2.334-4.304 7-1.969 10.422 2.335 3.421 7.002 4.302 10.422 1.968 46.407-31.66 100.757-48.395 157.174-48.395 49.922 0 98.909 13.328 141.665 38.542 40.264 23.744 74.115 
+                                                                                    57.378 98.132 97.449-24.016 40.069-57.867 73.702-98.131 97.443-42.756 25.21-91.743 38.536-141.666 38.536s-98.91-13.326-141.666-38.537c-40.264-23.742-74.115-57.375-98.132-97.444 15.823-26.417 35.784-49.914
+                                                                                    59.384-69.895 3.162-2.677 3.555-7.409.878-10.57-2.676-3.161-7.409-3.555-10.57-.878-26.031 22.04-47.862 48.145-64.887 77.59-1.343 2.323-1.343 5.186.001 7.508 25.419 43.956 61.972 80.821 105.708 106.61 
+                                                                                    45.061 26.571 96.684 40.616 149.284 40.616s104.223-14.045 149.284-40.616c43.736-25.789 80.289-62.654 105.708-106.61 1.344-2.322 1.344-5.186 0-7.508z"/><path d="m35.732 177.836c-2.188 2.738-2.188 
+                                                                                    6.626-.001 9.365 26.802 33.543 66.501 59.751 114.807 75.789 33.218 11.03 68.7 16.622 105.463 16.622 45.231 0 89.653-8.754 128.464-25.317 37.916-16.18 69.662-39.381 91.806-67.094 2.188-2.738 
+                                                                                    2.188-6.626-.001-9.364-30.208-37.795-77.786-66.73-133.969-81.476-27.628-7.256-56.663-10.935-86.3-10.935s-58.672 3.679-86.301 10.935c-10.688 2.809-21.187 6.167-31.198 9.979-42.844 
+                                                                                    16.264-78.381 40.987-102.77 71.496zm141.523-67.917c10.742-2.677 21.703-4.792 32.832-6.34-7.098 9.625-11.111 21.409-11.111 33.821 0 31.443 25.581 57.024 57.024 57.024s57.024-25.581
+                                                                                    57.024-57.024c0-12.412-4.013-24.196-11.111-33.821 11.129 1.547 22.089 3.663 32.832 6.34 3.078 8.809 4.641 18.034 4.641 27.48 0 45.979-37.406 
+                                                                                    83.386-83.386 83.386s-83.386-37.407-83.386-83.386c0-9.446 1.563-18.671 4.641-27.48zm99.814-8.839c12.954 7.519 20.956 21.287 20.956 36.32 0 
+                                                                                    23.172-18.853 42.024-42.024 42.024s-42.024-18.852-42.024-42.024c0-15.033 8.001-28.801 20.956-36.32 6.978-.435 14.005-.653 
+                                                                                    21.069-.653s14.089.219 21.067.653zm-133.237 19.281c5.342-2.034 10.84-3.915 16.426-5.662-1.75 7.395-2.643 14.986-2.643 
+                                                                                    22.701 0 54.25 44.136 98.386 98.386 98.386s98.386-44.136 98.386-98.386c0-7.722-.895-15.32-2.648-22.721 44.962 14.039 
+                                                                                    83.091 37.749 108.933 67.841-43.607 50.775-121.333 82.092-204.672 82.092-35.153 0-69.046-5.335-100.736-15.858-42.602-14.144-79.255-37.544-103.934-66.236 
+                                                                                    22.557-26.273 54.401-47.693 92.502-62.157z"/><path d="m111.102 352.401c-35.307 0-64.031 28.725-64.031 64.032s28.725 64.032 64.031 64.032c35.308 0 
+                                                                                    64.032-28.725 64.032-64.032s-28.725-64.032-64.032-64.032zm0 113.064c-27.036 0-49.031-21.996-49.031-49.032 0-27.037 21.995-49.032 49.031-49.032s49.032 
+                                                                                    21.996 49.032 49.032c0 27.037-21.996 49.032-49.032 49.032z"/><path d="m256 352.401c-35.308 0-64.032 28.725-64.032 64.032s28.725 64.032 64.032 64.032 
+                                                                                    64.032-28.725 64.032-64.032-28.724-64.032-64.032-64.032zm0 113.064c-27.036 0-49.032-21.996-49.032-49.032 0-27.037 21.996-49.032 49.032-49.032s49.032 
+                                                                                    21.996 49.032 49.032c0 27.037-21.996 49.032-49.032 49.032z"/><path d="m400.901 352.4c-11.386 0-22.571 3.033-32.348 8.772-3.572 2.097-4.768 6.692-2.671 
+                                                                                    10.265 2.097 3.572 6.694 4.768 10.265 2.671 7.476-4.388 16.035-6.708 24.754-6.708 27.035 0 49.029 21.995 49.029 49.03 0 27.041-21.994 49.04-49.029 
+                                                                                    49.04s-49.03-21.999-49.03-49.04c0-8.463 2.19-16.805 6.336-24.125 2.041-3.604.773-8.181-2.83-10.222-3.605-2.041-8.181-.773-10.223 2.831-5.419 
+                                                                                    9.569-8.283 20.467-8.283 31.516 0 35.312 28.724 64.04 64.03 64.04s64.029-28.728 64.029-64.04c0-35.306-28.724-64.03-64.029-64.03z"/></g></g></svg>
+                                                                                Color blind friendly')), 
+                                                                                       tags$div(HTML('<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                                                                  	 width="20" height="20" viewBox="0 0 48.961 48.96" style="enable-background:new 0 0 48.961 48.96;"
+                                                                                  	 xml:space="preserve">
+                                                                                  <g><g><path d="M48.961,24.469c0-0.344-0.154-0.667-0.42-0.884l-5.16-4.179l2.387-6.204c0.123-0.321,0.094-0.679-0.078-0.978
+                                                                                  			c-0.172-0.297-0.467-0.5-0.807-0.554l-6.566-1.036l-1.037-6.558c-0.053-0.338-0.256-0.635-0.553-0.807
+                                                                                  			c-0.297-0.172-0.654-0.202-0.977-0.077l-6.203,2.38L25.365,0.41c-0.434-0.535-1.334-0.533-1.766,0l-4.183,5.163l-6.205-2.38
+                                                                                  			c-0.321-0.125-0.68-0.095-0.975,0.077c-0.3,0.172-0.502,0.468-0.556,0.807l-1.037,6.558l-6.565,1.036
+                                                                                  			c-0.338,0.054-0.635,0.256-0.807,0.554c-0.17,0.299-0.199,0.656-0.076,0.978l2.387,6.204l-5.159,4.179
+                                                                                  			C0.154,23.802,0,24.125,0,24.47s0.154,0.667,0.423,0.884l5.159,4.18l-2.387,6.204c-0.123,0.318-0.094,0.679,0.076,0.977
+                                                                                  			c0.172,0.297,0.469,0.502,0.807,0.556l6.565,1.034l1.037,6.561c0.054,0.338,0.257,0.635,0.556,0.807
+                                                                                  			c0.295,0.172,0.651,0.201,0.973,0.077l6.207-2.379l4.182,5.161c0.216,0.268,0.539,0.421,0.884,0.421
+                                                                                  			c0.342,0,0.667-0.153,0.883-0.42l4.182-5.162l6.205,2.379c0.316,0.124,0.678,0.095,0.975-0.077s0.5-0.469,0.553-0.807l1.037-6.561
+                                                                                  			l6.566-1.034c0.34-0.054,0.635-0.259,0.807-0.556c0.172-0.298,0.201-0.656,0.078-0.977l-2.387-6.205l5.162-4.18
+                                                                                  			C48.807,25.134,48.961,24.813,48.961,24.469z M24.482,40.401c-8.799,0-15.932-7.136-15.932-15.933
+                                                                                  			c0-8.799,7.133-15.932,15.932-15.932s15.932,7.133,15.932,15.932C40.414,33.267,33.281,40.401,24.482,40.401z"/>
+                                                                                  		<path d="M24.482,10.529c-7.688,0-13.938,6.252-13.938,13.938c0,7.688,6.254,13.939,13.938,13.939c0.627,0,1.135-0.508,1.135-1.136
+                                                                                  			V11.664C25.617,11.038,25.109,10.529,24.482,10.529z"/>
+                                                                                  	</g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g></svg>
+                                                                                B&W')),
+                                                                                       tags$div(HTML('<svg id="Layer_1" enable-background="new 0 0 512 512" height="20" viewBox="0 0 512 512" width="20" xmlns="http://www.w3.org/2000/svg">
+                                                                                    <g><g><g><g><path d="m352.814 374.438c-8.068.381-14.275 7.341-14.275 15.431 0 21.681-17.548 39.256-39.195 
+                                                                                    39.256h-22.593v-182.172h-41.759v84.045c-.061-.001-.12-.01-.181-.01h-22.592c-21.647 0-39.195-17.576-39.195-39.256 
+                                                                                    0-8.09-6.207-15.05-14.275-15.431-8.614-.406-15.725 6.468-15.725 15.006 0 38.509 31.169 
+                                                                                    69.728 69.618 69.728h21.745c.204 0 .403-.021.605-.029v143.494h41.759v-45.349c.142.004.281.02.424.02h21.745c38.449 
+                                                                                    0 69.618-31.218 69.618-69.728.001-8.537-7.11-15.412-15.724-15.005z" fill="#ffcb69"/><g><path d="m69.875 
+                                                                                    70.749h33.165c0-17.466 14.277-31.625 31.89-31.625h55.568c0-17.466 14.277-31.625 31.89-31.625h23.318c17.612 
+                                                                                    0 31.89 14.159 31.89 31.625h13.396c17.544 0 31.774 14.05 31.885 31.422h11.801c17.612 0 31.89 14.159 31.89 31.625 
+                                                                                    0 .034-.002.067-.003.101 0 .034.003.067.003.102 0 17.466-14.277 31.625-31.89 31.625h-103.363c-.111 17.372-14.341 
+                                                                                    31.422-31.885 31.422l-5.52.203c-17.612 0-31.89-14.159-31.89-31.625l-91.335.195c-17.959.338-32.701-14.006-32.701-31.819.001-17.467 
+                                                                                    14.279-31.626 31.891-31.626z" fill="#ff73a1"/><g fill="#fa6193"><path d="m176.51 160.495c5.005 3.239 10.979 5.128 17.401 
+                                                                                    5.128h24.019c1.209 0 2.4-.073 3.574-.203h-22.074c17.544 0 31.774-14.05 31.885-31.422h-40c-.071 11.148-5.961 20.92-14.805 
+                                                                                    26.497z"/>
+                                                                                    <path d="m366.566 102.171c0-17.466-14.277-31.625-31.89-31.625h-11.801c-.111-17.372-14.341-31.422-31.885-31.422h-13.396c0-17.466-14.278-31.625-31.89-31.625h-23.318c-2.887 
+                                                                                    0-5.682.387-8.341 1.1 13.565 3.637 23.549 15.922 23.549 30.524h13.396c17.544 0 31.774 14.05 31.885 31.422h11.801c17.612 0 31.89 14.159 31.89 31.625 0 
+                                                                                    .034-.002.067-.003.101 0 .034.003.067.003.102 0 17.466-14.277 31.625-31.89 31.625h40c17.612 0 31.89-14.159 31.89-31.625 0-.034-.002-.067-.003-.102 
+                                                                                    0-.032.003-.066.003-.1z"/></g><path d="m457.304 133.953c0-17.466-14.277-31.625-31.89-31.625h-23.164c0-17.466-14.277-31.625-31.89-31.625h-24.568c0-17.466-14.277-31.624-31.89-31.624h-23.318c-17.612 
+                                                                                    0-31.89 14.159-31.89 31.624h-23.396c-17.612 0-31.89 14.159-31.89 31.625h-21.796c-17.612 0-31.89 14.159-31.89 31.625 0 17.466 14.277 31.625 31.89 31.625h104.858c0 17.466 14.277 31.625 31.89 
+                                                                                    31.625h64.019c17.612 0 31.89-14.159 31.89-31.625l10.335.195c17.958.337 32.7-14.007 32.7-31.82z" fill="#ffbdd3"/>
+                                                                                    <path d="m425.415 102.328h-23.165c0-17.466-14.277-31.625-31.89-31.625h-24.568c0-17.466-14.277-31.625-31.89-31.625h-23.318c-2.887 0-5.681.387-8.341 1.1 13.565 3.637 23.549 15.921 23.549 
+                                                                                    30.524h24.568c17.612 0 31.89 14.159 31.89 31.625h23.165c17.612 0 31.89 14.159 31.89 31.625 0 17.813-14.742 32.158-32.701 31.819l-10.335-.195c0 17.466-14.277 31.625-31.89 
+                                                                                    31.625h40c17.612 0 31.89-14.159 31.89-31.625l10.335.195c17.959.338 32.701-14.006 32.701-31.819-.001-17.465-14.278-31.624-31.89-31.624z" fill="#ffa6c3"/>
+                                                                                    <path d="m472.482 196.05h-23.996c-.505-17.028-14.573-30.679-31.866-30.679h-23.996c-.505-17.027-14.573-30.679-31.866-30.679h-121.593c-17.612 
+                                                                                    0-31.89 14.159-31.89 31.625 0 14.815 10.274 27.246 24.14 30.679-13.866 3.434-24.14 15.865-24.14 30.679 0 17.466 14.277 31.625 31.89 
+                                                                                    31.625h233.317c17.612 0 31.89-14.159 31.89-31.625 0-17.466-14.277-31.625-31.89-31.625z" fill="#ff73a1"/><path d="m472.482 
+                                                                                    196.05h-23.996c-.505-17.028-14.573-30.679-31.865-30.679h-23.996c-.505-17.027-14.573-30.679-31.865-30.679h-40c17.292 0 
+                                                                                    31.36 13.652 31.865 30.679h23.996c17.292 0 31.36 13.652 31.865 30.679h23.996c17.612 0 31.89 14.159 31.89 31.625s-14.277 31.625-31.89 
+                                                                                    31.625h40c17.612 0 31.89-14.159 31.89-31.625s-14.277-31.625-31.89-31.625z" fill="#fa6193"/>
+                                                                                    <path d="m276.125 196.927h-36.825c0-17.466-14.277-31.625-31.89-31.625h-101.594c-17.612 0-31.89 14.159-31.89 31.625h-34.664c-17.612 
+                                                                                    0-31.89 14.159-31.89 31.625s14.277 31.625 31.89 31.625h40.511c0 17.466 14.278 31.625 31.89 31.625h111.126c17.612 0 31.89-14.159 
+                                                                                    31.89-31.625h21.447c17.612 0 31.89-14.159 31.89-31.625-.002-17.466-14.279-31.625-31.891-31.625z" fill="#ffbdd3"/>
+                                                                                    <path d="m276.125 196.927h-36.825c0-17.466-14.277-31.625-31.89-31.625h-40c17.612 0 31.89 14.159 31.89 
+                                                                                    31.625h36.825c17.612 0 31.89 14.159 31.89 31.625s-14.277 31.625-31.89 31.625h-21.447c0 17.466-14.277 
+                                                                                    31.625-31.89 31.625h40c17.612 0 31.89-14.159 31.89-31.625h21.447c17.612 0 31.89-14.159 
+                                                                                    31.89-31.625-.001-17.466-14.278-31.625-31.89-31.625z" fill="#ffa6c3"/>
+                                                                                    <path d="m430.856 293.311h-91.594c-17.612 0-31.89 14.159-31.89 31.625h-13.731c-17.612 0-31.89 
+                                                                                    14.159-31.89 31.624 0 17.466 14.277 31.624 31.89 31.624h100.19c17.612 0 31.89-14.159 
+                                                                                    31.89-31.624h5.135c17.612 0 31.89-14.159 31.89-31.625-.001-17.466-14.278-31.624-31.89-31.624z" fill="#ff8fb4"/>
+                                                                                    <path d="m430.855 293.311h-40c17.612 0 31.89 14.159 31.89 31.625 0 17.466-14.277 31.625-31.89 31.625h-5.135c0 
+                                                                                    17.466-14.278 31.624-31.89 31.624h40c17.612 0 31.89-14.159 31.89-31.624h5.135c17.612 0 31.89-14.159 
+                                                                                    31.89-31.625 0-17.467-14.277-31.625-31.89-31.625z" fill="#ff73a1"/></g></g></g></g>
+                                                                                    <path d="m472.482 188.55h-17.389c-1.694-7.775-5.677-14.64-11.215-19.896 35.826-19.451 
+                                                                                    22.473-73.481-18.464-73.826h-16.391c-3.532-17.998-19.526-31.625-38.664-31.625h-17.794c-3.532-17.997-19.526-31.624-38.663-31.624-4.611.145-25.286-.415-29.462.485-3.357-18.213-19.443-32.064-38.735-32.064h-23.318c-19.137 
+                                                                                    0-35.131 13.627-38.664 31.625h-48.793c-19.137 0-35.131 13.627-38.664 31.625h-26.391c-53.03 2.348-51.588 76.939.889 78.444 0 0 72.211-.18 72.211-.18 1.197 6.015 3.794 11.568 7.456 16.289h-44.614c-19.137 
+                                                                                    0-35.131 13.627-38.664 31.625h-27.891c-52.188 1.972-52.169 76.288 0 78.25h33.736c3.533 17.997 19.526 31.625 38.664 31.625h24.3c4.04 40.199 38.615 70.336 80.208 69.233 3.774.001 
+                                                                                    7.547.001 11.321.001v46.703c0 9.697 15 9.697 15 0v-54.231c-.478-4.735-3.094-7.232-7.846-7.492-6.159.099-12.317.106-18.476.021-33.528.865-60.981-22.151-65.125-54.234h15.096c3.603
+                                                                                    22.382 22.841 39.187 46.076 39.187h22.407c3.895.169 7.867-3.616 7.867-7.491v-36.953c9.672-5.574 16.751-15.117 18.959-26.368h7.801v58.195c-19.864 15.069-19.856 46.314 
+                                                                                    0 61.376v41.876c0 4.142 3.357 7.5 7.5 7.5h22.593c23.779 0 43.45-17.895 46.32-40.94h14.907c-2.735 22.869-16.942 42.594-37.481 51.348-14.765 5.499-30.59 
+                                                                                    5.179-46.071 4.624-4.468-.152-7.873 3.554-7.768 7.608.1 12.472.116 25.222.118 37.735h-26.979l.101-36.37c.026-9.414-14.973-9.93-15-.042l-.099 36.411h-115.728c-9.815.265-9.997 14.673 
+                                                                                    0 15h288.418c9.816-.265 9.997-14.673 0-15h-115.71c-.002-9.942-.012-20.036-.067-30.037 47.228 3.225 85.192-21.485 91.36-71.278h18.166c19.149 
+                                                                                    0 35.15-13.645 38.67-31.658 50.965-3.891 49.563-76.39-1.646-78.216h-91.593c-19.137 0-35.131 13.628-38.663 31.625-5.245-.197-11.401-.074-16.347 1.132v-51.733s154.388-.036 188.23-.036c21.72 
+                                                                                    0 39.39-17.551 39.39-39.125.001-21.573-17.669-39.124-39.389-39.124zm-173.137 233.075h-15.093v-27.072c6.156 2.109 39.289.789 46.245 1.132-2.736 14.741-15.659 25.94-31.152 25.94zm8.027-89.19c4.143 
+                                                                                    0 7.5-3.358 7.5-7.5 0-13.302 10.941-24.125 24.39-24.125h91.594c32.285 1.203 32.33 47.029 0 48.25-5.183-.927-12.635.802-12.635 7.5 0 13.302-10.941 24.125-24.39 24.125h-100.189c-32.288-1.205-32.328-47.029 
+                                                                                    0-48.249 0 0 13.73-.001 13.73-.001zm-236.705-205.742c-32.564-1.347-33.926-46.666-.793-48.444h33.165c4.142 0 7.5-3.358 7.5-7.5 0-13.303 10.941-24.125 24.39-24.125h55.567c4.142 0 7.5-3.358 7.5-7.5 0-13.302 
+                                                                                    10.941-24.125 24.39-24.125h23.318c12.846 0 23.397 9.877 24.317 22.355-9.229 5.635-15.958 14.935-18.101 25.848h-16.622c-19.137 0-35.131 13.627-38.664 31.625h-15.022c-19.159 0-35.158 13.659-38.667 31.686zm156.825 
+                                                                                    196.795h-15.273c-14.923 0-27.423-10.214-30.797-24.187 2.142-.092 45.666.259 46.07-.286zm27.186-70.811c-4.142 0-7.5 3.358-7.5 7.5 0 13.302-10.941 24.125-24.39 24.125h-111.126c-13.448 0-24.39-10.822-24.39-24.125 
+                                                                                    0-4.142-3.358-7.5-7.5-7.5h-40.511c-32.245-1.185-32.368-47.014 0-48.25h34.665c4.142 0 7.5-3.358 7.5-7.5 0-13.302 10.941-24.125 24.39-24.125h101.594c13.448 0 24.39 10.822 24.39 24.125 0 4.142 3.358 7.5 7.5 7.5h36.825c32.249 
+                                                                                    1.187 32.364 47.016 0 48.25zm217.804-.878h-164.698c19.252-25.217.323-62.671-31.66-62.372h-30.051c-2.989-15.227-14.899-27.324-30.086-30.687 3.189-9.675 12.328-16.549 23.177-16.549h57.707c9.697 0 9.697-15 0-15h-57.707c-18.891 
+                                                                                    0-34.573 12.965-38.458 30.611h-22.686c-29.539-5.136-26.522-47.157 3.594-47.975h21.796c4.142 0 7.5-3.358 7.5-7.5 0-13.303 10.941-24.125 24.39-24.125h23.396c4.143 0 7.5-3.358 7.5-7.5 0-13.302 10.941-24.124 24.39-24.124h23.317c13.448 
+                                                                                    0 24.39 10.822 24.39 24.124 0 4.142 3.357 7.5 7.5 7.5h24.567c13.449 0 24.391 10.822 24.391 24.125 0 4.142 3.357 7.5 7.5 7.5h23.165c13.448 0 24.39 10.822 24.39 24.125 0 13.575-11.581 24.558-25.06 24.321-2.714-.007-5.422-.142-8.125-.403h-17.389c-3.854-17.688-19.546-30.679-38.473-30.679h-22.22c-9.697 0-9.697 
+                                                                                    15 0 15h22.22c13.275 0 23.979 10.279 24.368
+                                                                                    23.401.12 4.054 3.441 7.278 7.497 7.278 9.339-.217 18.7-.041 28.024.328 11.35 1.836 19.991 11.309 20.341 23.074.121 4.054 3.441 7.277 7.497 7.277h23.996c32.304 1.21 32.313 47.037 0 48.25z"/></g></svg>
+                                                                                Cherry tree')), 
+                                                                                       tags$div(HTML('<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                                                                      	 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="20" height="20">
+                                                                                      <path style="fill:#319FBC;" d="M503.322,231.338c-35.334,0-35.334-32.399-70.667-32.399s-35.334,32.399-70.667,32.399
+                                                                                      	c-35.333,0-35.333-32.399-70.664-32.399s-35.331,32.399-70.662,32.399c-35.329,0-35.329-32.399-70.658-32.399
+                                                                                      	c-35.33,0-35.33,32.399-70.662,32.399S44.01,198.939,8.68,198.939v81.728c35.331,0,35.331,32.399,70.662,32.399
+                                                                                      	s35.33-32.399,70.662-32.399c35.329,0,35.329,32.399,70.658,32.399c35.331,0,35.331-32.399,70.662-32.399
+                                                                                      	c35.333,0,35.333,32.399,70.664,32.399c35.334,0,35.334-32.399,70.667-32.399s35.334,32.399,70.667,32.399"/>
+                                                                                      <path style="fill:#2690A8;" d="M503.322,149.609c-35.334,0-35.334-32.399-70.667-32.399s-35.334,32.399-70.667,32.399
+                                                                                      	c-35.333,0-35.333-32.399-70.664-32.399s-35.331,32.399-70.662,32.399c-35.329,0-35.329-32.399-70.658-32.399
+                                                                                      	c-35.33,0-35.33,32.399-70.662,32.399S44.01,117.21,8.68,117.21v81.728c35.331,0,35.331,32.399,70.662,32.399
+                                                                                      	s35.33-32.399,70.662-32.399c35.329,0,35.329,32.399,70.658,32.399c35.331,0,35.331-32.399,70.662-32.399
+                                                                                      	c35.333,0,35.333,32.399,70.664,32.399c35.334,0,35.334-32.399,70.667-32.399s35.334,32.399,70.667,32.399"/>
+                                                                                      <path style="fill:#40B3DB;" d="M503.322,313.065c-35.334,0-35.334-32.399-70.667-32.399s-35.334,32.399-70.667,32.399
+                                                                                      	c-35.333,0-35.333-32.399-70.664-32.399s-35.331,32.399-70.662,32.399c-35.329,0-35.329-32.399-70.658-32.399
+                                                                                      	c-35.33,0-35.33,32.399-70.662,32.399S44.01,280.666,8.68,280.666v81.728c35.331,0,35.331,32.399,70.662,32.399
+                                                                                      	s35.33-32.399,70.662-32.399c35.329,0,35.329,32.399,70.658,32.399c35.331,0,35.331-32.399,70.662-32.399
+                                                                                      	c35.333,0,35.333,32.399,70.664,32.399c35.334,0,35.334-32.399,70.667-32.399s35.334,32.399,70.667,32.399"/>
+                                                                                      <path d="M8.68,125.889c14.289,0,20.987,6.142,29.465,13.917c9.447,8.663,20.155,18.483,41.198,18.483
+                                                                                      	c21.042,0,31.749-9.819,41.197-18.481c8.478-7.776,15.176-13.918,29.465-13.918c14.288,0,20.985,6.142,29.464,13.917
+                                                                                      	c9.447,8.663,20.154,18.483,41.196,18.483s31.749-9.818,41.197-18.481c8.479-7.776,15.177-13.918,29.466-13.918
+                                                                                      	c14.289,0,20.987,6.142,29.466,13.917c9.448,8.663,20.156,18.483,41.198,18.483s31.75-9.818,41.198-18.481
+                                                                                      	c8.481-7.776,15.178-13.918,29.469-13.918c14.29,0,20.989,6.142,29.469,13.918c9.447,8.663,20.155,18.481,41.198,18.481
+                                                                                      	c4.794,0,8.678-3.886,8.678-8.678c0-4.793-3.884-8.678-8.678-8.678c-14.29,0-20.989-6.142-29.469-13.918
+                                                                                      	c-9.447-8.663-20.155-18.481-41.198-18.481c-21.043,0-31.751,9.819-41.199,18.481c-8.479,7.776-15.177,13.918-29.467,13.918
+                                                                                      	s-20.988-6.142-29.467-13.918c-9.448-8.663-20.155-18.481-41.198-18.481s-31.75,9.819-41.198,18.483
+                                                                                      	c-8.478,7.776-15.176,13.917-29.465,13.917c-14.288,0-20.985-6.142-29.464-13.917c-9.447-8.663-20.154-18.483-41.196-18.483
+                                                                                      	s-31.749,9.819-41.197,18.481c-8.478,7.776-15.176,13.918-29.465,13.918s-20.987-6.142-29.466-13.918
+                                                                                      	c-9.448-8.662-20.155-18.481-41.197-18.481c-4.794,0-8.678,3.886-8.678,8.678S3.886,125.889,8.68,125.889z"/>
+                                                                                      <path d="M503.323,222.659c-14.29,0-20.989-6.142-29.469-13.918c-9.447-8.663-20.155-18.481-41.198-18.481
+                                                                                      	s-31.751,9.819-41.199,18.481c-8.479,7.776-15.177,13.918-29.467,13.918s-20.988-6.142-29.468-13.918
+                                                                                      	c-9.447-8.663-20.154-18.481-41.197-18.481s-31.75,9.819-41.198,18.483c-8.478,7.776-15.176,13.917-29.465,13.917
+                                                                                      	c-14.288,0-20.984-6.142-29.464-13.917c-1.083-0.993-2.165-1.986-3.263-2.965c-3.578-3.19-9.064-2.873-12.253,0.704
+                                                                                      	c-3.189,3.578-2.873,9.064,0.704,12.253c1.037,0.925,2.059,1.862,3.081,2.799c9.447,8.662,20.154,18.481,41.195,18.481
+                                                                                      	c21.042,0,31.749-9.818,41.197-18.481c8.479-7.776,15.177-13.918,29.466-13.918s20.987,6.142,29.466,13.917
+                                                                                      	c9.448,8.663,20.156,18.483,41.198,18.483s31.75-9.818,41.198-18.481c8.481-7.776,15.178-13.918,29.469-13.918
+                                                                                      	c14.29,0,20.989,6.142,29.469,13.918c9.447,8.663,20.155,18.481,41.198,18.481c4.794,0,8.678-3.886,8.678-8.678
+                                                                                      	C512.001,226.544,508.116,222.659,503.323,222.659z"/>
+                                                                                      <path d="M8.68,207.617c14.289,0,20.987,6.142,29.465,13.917c9.447,8.663,20.155,18.483,41.198,18.483
+                                                                                      	c21.042,0,31.749-9.819,41.197-18.481c8.478-7.776,15.176-13.918,29.465-13.918c3.118,0,5.927,0.289,8.587,0.883
+                                                                                      	c4.674,1.044,9.317-1.899,10.362-6.577s-1.9-9.317-6.577-10.362c-3.864-0.863-8.027-1.302-12.372-1.302
+                                                                                      	c-21.042,0-31.749,9.819-41.197,18.481c-8.478,7.776-15.176,13.918-29.465,13.918s-20.987-6.142-29.466-13.918
+                                                                                      	c-9.447-8.663-20.155-18.481-41.197-18.481c-4.794,0-8.678,3.886-8.678,8.678S3.886,207.617,8.68,207.617z"/>
+                                                                                      <path d="M503.323,386.115c-14.29,0-20.989-6.142-29.469-13.918c-9.447-8.663-20.155-18.481-41.198-18.481
+                                                                                      	s-31.751,9.819-41.199,18.481c-8.479,7.776-15.177,13.918-29.467,13.918s-20.988-6.142-29.468-13.918
+                                                                                      	c-9.447-8.663-20.154-18.481-41.197-18.481s-31.75,9.819-41.198,18.483c-8.478,7.776-15.176,13.917-29.465,13.917
+                                                                                      	c-14.288,0-20.985-6.142-29.464-13.917c-9.447-8.663-20.153-18.483-41.196-18.483s-31.749,9.819-41.197,18.481
+                                                                                      	c-8.478,7.776-15.176,13.918-29.465,13.918c-4.794,0-8.678,3.886-8.678,8.678s3.884,8.678,8.678,8.678
+                                                                                      	c21.042,0,31.749-9.819,41.197-18.481c8.478-7.776,15.176-13.918,29.465-13.918c14.288,0,20.985,6.142,29.464,13.917
+                                                                                      	c9.447,8.663,20.153,18.483,41.196,18.483s31.749-9.818,41.197-18.481c8.479-7.776,15.177-13.918,29.466-13.918
+                                                                                      	s20.987,6.142,29.466,13.918c9.448,8.662,20.156,18.481,41.198,18.481c21.042,0,31.75-9.818,41.198-18.481
+                                                                                      	c8.481-7.776,15.178-13.918,29.469-13.918c14.29,0,20.989,6.142,29.469,13.918c9.447,8.663,20.155,18.481,41.198,18.481
+                                                                                      	c4.794,0,8.678-3.886,8.678-8.678S508.116,386.115,503.323,386.115z"/>
+                                                                                      <path d="M59.028,379.917c-3.162-2.227-6.071-4.895-9.152-7.719c-9.447-8.663-20.155-18.483-41.197-18.483
+                                                                                      	c-4.794,0-8.678,3.886-8.678,8.678c0,4.793,3.884,8.678,8.678,8.678c14.289,0,20.987,6.142,29.466,13.918
+                                                                                      	c3.35,3.071,6.812,6.246,10.888,9.117c1.519,1.07,3.262,1.584,4.989,1.584c2.727,0,5.414-1.282,7.104-3.682
+                                                                                      	C63.886,388.09,62.946,382.677,59.028,379.917z"/>
+                                                                                      <path d="M503.323,304.387c-14.29,0-20.989-6.142-29.469-13.918c-9.447-8.663-20.155-18.481-41.198-18.481
+                                                                                      	c-21.042,0-31.749,9.818-41.198,18.48c-3.533,3.239-3.771,8.728-0.531,12.262c3.238,3.533,8.727,3.77,12.262,0.531
+                                                                                      	c8.479-7.775,15.178-13.917,29.467-13.917c14.29,0,20.989,6.142,29.469,13.918c9.447,8.663,20.155,18.481,41.198,18.481
+                                                                                      	c4.794,0,8.678-3.886,8.678-8.678C512.001,308.272,508.116,304.387,503.323,304.387z"/>
+                                                                                      <path d="M8.68,289.344c14.289,0,20.987,6.142,29.465,13.917c9.447,8.663,20.155,18.483,41.198,18.483
+                                                                                      	c21.042,0,31.749-9.819,41.197-18.481c8.478-7.776,15.176-13.918,29.465-13.918c14.288,0,20.985,6.142,29.464,13.918
+                                                                                      	c9.447,8.662,20.154,18.481,41.196,18.481s31.749-9.818,41.197-18.481c8.479-7.776,15.177-13.918,29.466-13.918
+                                                                                      	c14.289,0,20.987,6.142,29.466,13.918c9.448,8.662,20.156,18.481,41.198,18.481c4.913,0,9.587-0.56,13.89-1.664
+                                                                                      	c4.642-1.192,7.439-5.922,6.247-10.563c-1.191-4.642-5.915-7.439-10.564-6.248c-2.934,0.753-6.066,1.12-9.573,1.12
+                                                                                      	c-14.29,0-20.988-6.142-29.468-13.918c-9.447-8.663-20.154-18.481-41.197-18.481s-31.75,9.819-41.198,18.483
+                                                                                      	c-8.478,7.776-15.176,13.917-29.465,13.917c-14.288,0-20.985-6.142-29.464-13.918c-9.447-8.662-20.153-18.481-41.196-18.481
+                                                                                      	s-31.749,9.819-41.197,18.481c-8.478,7.776-15.176,13.918-29.465,13.918s-20.987-6.142-29.466-13.918
+                                                                                      	c-9.447-8.663-20.155-18.481-41.197-18.481c-4.794,0-8.678,3.886-8.678,8.678S3.886,289.344,8.68,289.344z"/>
+                                                                                      <g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g></svg>
+                                                                                 Sea')), 
+                                                                                       tags$div(HTML('<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                                                                      	 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="20" height="20">
+                                                                                      <path style="fill:#FF9811;" d="M256,123.733c-94.259,0-170.667,76.416-170.667,170.667c0,23.492,4.847,46.729,14.251,68.267h312.832
+                                                                                      	c37.7-86.391-1.766-186.982-88.149-224.683C302.729,128.58,279.492,123.733,256,123.733z"/>
+                                                                                      <g>
+                                                                                      	<path style="fill:#231F20;" d="M256,106.667c-4.71,0-8.533-3.823-8.533-8.533v-51.2c0-4.71,3.823-8.533,8.533-8.533
+                                                                                      		c4.71,0,8.533,3.823,8.533,8.533v51.2C264.533,102.844,260.71,106.667,256,106.667z"/>
+                                                                                      	<path style="fill:#231F20;" d="M180.907,121.609c-3.456,0.009-6.571-2.074-7.893-5.265L159.957,84.77
+                                                                                      		c-1.673-4.403,0.538-9.335,4.941-11.008c4.224-1.604,8.969,0.358,10.82,4.48l13.065,31.573c1.809,4.352-0.265,9.344-4.617,11.153
+                                                                                      		c-1.033,0.427-2.142,0.649-3.26,0.649V121.609z"/>
+                                                                                      	<path style="fill:#231F20;" d="M74.667,227.84c-1.118,0-2.219-0.222-3.251-0.649l-31.573-13.056
+                                                                                      		c-4.352-1.801-6.426-6.793-4.617-11.145c1.809-4.352,6.793-6.426,11.145-4.625l31.531,13.056c4.352,1.801,6.426,6.793,4.625,11.145
+                                                                                      		C81.203,225.749,78.106,227.831,74.667,227.84z"/>
+                                                                                      	<path style="fill:#231F20;" d="M437.333,227.84c-4.71,0-8.533-3.814-8.542-8.525c0-3.456,2.082-6.571,5.274-7.893l31.573-13.056
+                                                                                      		c4.352-1.801,9.344,0.265,11.145,4.625c1.801,4.361-0.264,9.344-4.625,11.145l-31.573,13.056
+                                                                                      		C439.561,227.618,438.451,227.84,437.333,227.84z"/>
+                                                                                      	<path style="fill:#231F20;" d="M331.093,121.609c-4.71,0-8.533-3.823-8.525-8.542c0-1.118,0.222-2.227,0.649-3.26l13.065-31.531
+                                                                                      		c1.929-4.301,6.98-6.221,11.281-4.292c4.122,1.852,6.093,6.596,4.48,10.82l-13.056,31.573
+                                                                                      		C337.655,119.552,334.541,121.617,331.093,121.609z"/>
+                                                                                      	<path style="fill:#231F20;" d="M117.214,164.147c-2.261,0-4.437-0.896-6.033-2.5L74.982,125.44
+                                                                                      		c-3.465-3.191-3.695-8.593-0.503-12.058c3.191-3.465,8.593-3.695,12.058-0.503c0.171,0.162,0.341,0.324,0.503,0.503l36.198,36.198
+                                                                                      		c3.328,3.337,3.328,8.738,0,12.066c-1.596,1.596-3.772,2.5-6.033,2.5L117.214,164.147L117.214,164.147z"/>
+                                                                                      	<path style="fill:#231F20;" d="M59.733,302.933h-51.2C3.823,302.933,0,299.11,0,294.4s3.823-8.533,8.533-8.533h51.2
+                                                                                      		c4.71,0,8.533,3.823,8.533,8.533S64.444,302.933,59.733,302.933z"/>
+                                                                                      	<path style="fill:#231F20;" d="M503.467,302.933h-51.2c-4.71,0-8.533-3.823-8.533-8.533s3.823-8.533,8.533-8.533h51.2
+                                                                                      		c4.71,0,8.533,3.823,8.533,8.533S508.177,302.933,503.467,302.933z"/>
+                                                                                      	<path style="fill:#231F20;" d="M394.786,164.147c-4.71,0-8.533-3.823-8.533-8.533c0-2.261,0.896-4.429,2.5-6.033l36.207-36.198
+                                                                                      		c3.191-3.465,8.593-3.695,12.058-0.503c3.465,3.191,3.695,8.593,0.503,12.058c-0.162,0.171-0.324,0.341-0.503,0.503l-36.198,36.198
+                                                                                      		C399.223,163.243,397.047,164.147,394.786,164.147z"/>
+                                                                                      	<path style="fill:#231F20;" d="M503.467,354.133h-78.72c33.306-93.193-15.241-195.746-108.442-229.052
+                                                                                      		S120.559,140.322,87.253,233.523c-13.935,38.997-13.935,81.621,0,120.619H8.533c-4.71,0-8.533,3.823-8.533,8.533
+                                                                                      		c0,4.71,3.823,8.533,8.533,8.533h494.933c4.71,0,8.533-3.823,8.533-8.533C512,357.965,508.177,354.133,503.467,354.133z
+                                                                                      		 M105.267,354.133c-32.981-83.251,7.765-177.468,91.008-210.458s177.468,7.765,210.458,91.008
+                                                                                      		c15.198,38.366,15.198,81.084,0,119.45H105.267z"/>
+                                                                                      	<path style="fill:#231F20;" d="M452.267,405.333H59.733c-4.71,0-8.533-3.823-8.533-8.533s3.823-8.533,8.533-8.533h392.533
+                                                                                      		c4.71,0,8.533,3.823,8.533,8.533S456.977,405.333,452.267,405.333z"/>
+                                                                                      	<path style="fill:#231F20;" d="M409.6,439.467H102.4c-4.71,0-8.533-3.823-8.533-8.533s3.823-8.533,8.533-8.533h307.2
+                                                                                      		c4.71,0,8.533,3.823,8.533,8.533S414.31,439.467,409.6,439.467z"/>
+                                                                                      	<path style="fill:#231F20;" d="M358.4,473.6H153.6c-4.71,0-8.533-3.823-8.533-8.533s3.823-8.533,8.533-8.533h204.8
+                                                                                      		c4.71,0,8.533,3.823,8.533,8.533S363.11,473.6,358.4,473.6z"/>
+                                                                                      </g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g></svg>
+                                                                                 Sunset')), 
+                                                                                       tags$div(HTML('<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                                                                    	 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="20" height="20">
+                                                                                    	 		<g><g><g><path d="M500.04,337.299l-78.937-45.574c-15.933-9.199-35.929,2.313-35.929,20.743v27.074h-35.651
+                                                                                    				c-32.535,0-61.903-18.017-76.647-47.018l-45.657-89.815c-21.089-41.487-63.101-67.259-109.641-67.259H18.507
+                                                                                    				C8.286,135.45,0,143.736,0,153.956s8.286,18.507,18.507,18.507h99.072c32.535,0,61.903,18.016,76.647,47.018l18.563,36.518
+                                                                                    				c-17.939,35.288-35.005,83.536-95.21,83.536c-10.221,0-18.507,8.286-18.507,18.507c0,10.221,8.286,18.507,18.507,18.507
+                                                                                    				c46.54,0,88.552-25.772,109.641-67.259l6.329-12.453l6.333,12.459c21.089,41.487,63.101,67.258,109.641,67.258h35.651v27.062
+                                                                                    				c0,18.404,19.972,29.957,35.929,20.743l78.937-45.574C515.973,369.587,516,346.514,500.04,337.299z"/>
+                                                                                    			<path d="M53.496,339.537h-34.99C8.286,339.537,0,347.823,0,358.044s8.286,18.507,18.507,18.507h34.99
+                                                                                    				c10.221,0,18.507-8.286,18.507-18.507S63.718,339.537,53.496,339.537z"/>
+                                                                                    			<path d="M421.103,220.275l78.937-45.573c15.935-9.199,15.96-32.273,0-41.488L421.103,87.64
+                                                                                    				c-15.938-9.203-35.929,2.318-35.929,20.743v91.149C385.173,217.931,405.143,229.49,421.103,220.275z"/>
+                                                                                    			<path d="M360.498,172.458v-37.013c-46.421,0-84.991,13.09-112.563,53.656c1.513,2.848-1.476-2.996,20.215,39.673
+                                                                                    				C294.915,176.119,326.725,172.458,360.498,172.458z"/>
+                                                                                    		</g></g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g></svg>
+                                                                                 Random colors')), 
+                                                                                       tags$div(HTML('<svg id="Capa_1" enable-background="new 0 0 512 512" height="20" viewBox="0 0 512 512" width="20" xmlns="http://www.w3.org/2000/svg">
+                                                                                    <g><circle cx="256" cy="256" fill="#abd5ed" r="256"/>
+                                                                                    <path d="m512 256c0-7.464-.338-14.848-.964-22.15-44.18-44.18-116.443-116.443-116.443-116.443l-277.186 277.186s72.265
+                                                                                    72.264 116.443 116.443c7.302.626 14.686.964 22.15.964 141.385 0 256-114.615 256-256z" fill="#97bedb"/><g>
+                                                                                    <path d="m256 60-48.797 98 48.797 98 103.801-34.792 34.792-103.801c-35.469-35.469-84.469-57.407-138.593-57.407z" fill="#ffe278"/>
+                                                                                    <path d="m256 60c-50.161 0-100.322 19.136-138.593 57.407l34.792 103.801 103.801 34.792z" fill="#b0d16f"/>
+                                                                                    <path d="m117.407 117.407c-35.469 35.469-57.407 84.469-57.407 138.593l98 48.797 98-48.797z" fill="#45c5ff"/>
+                                                                                    <path d="m60 256c0 50.161 19.136 100.322 57.407 138.593l103.801-34.792 34.792-103.801z" fill="#0ca8ed"/>
+                                                                                    <path d="m117.407 394.593c35.469 35.469 84.469 57.407 138.593 57.407l48.797-98-48.797-98z" fill="#1365c2"/>
+                                                                                    <path d="m256 452c50.161 0 100.322-19.136 138.593-57.407l-34.792-103.801-103.801-34.792z" fill="#f71e78"/>
+                                                                                    <path d="m394.593 394.593c35.469-35.469 57.407-84.469 57.407-138.593l-98-48.797-98 48.797z" fill="#ff776b"/>
+                                                                                    <path d="m394.593 117.407-138.593 138.593h196c0-50.161-19.136-100.322-57.407-138.593z" fill="#ffb54c"/></g></g></svg>
+                                                                                 Customize'))),
+                                                                    choiceValues = list("Default", "Color blind friendly", "B&W",
+                                                                                        "Cherry tree", "Sea", "Sunset", "Random colors", "Customize"),
+                                                                    selected = "Default"),
+                                                       tags$head(tags$script(HTML("$(document).ready(function(e) {
+                                                                    $('input[value=\"Sunset\"]').parent().parent().after('<hr><p style=\"color:#333333;font-weight:bold;font-family:Arial;\">Choose your own:</p>');
+                                                                   })"))),
 
+                                                       ), column(6,
+                                                                 shinyjs::hidden(div(id = "customize_theme",
+                                                                                     tags$h2("Customization options"),
+                                                                                     tags$h3("Backgrounds"),
+                                                                                     fluidRow(column(4, colourpicker::colourInput("ir.color", "IR region", "orange1")),
+                                                                                              column(4, colourpicker::colourInput("ssc.color", "SSC region", "#82B6E2")),
+                                                                                              column(4, colourpicker::colourInput("lsc.color", "LSC region", "#299E96"))),
+                                                                                     tags$h3("Gene Class colors"),
+                                                                                     fluidRow(column(4, colourpicker::colourInput("psa.color", "photosystem I", "#2A6332"),
+                                                                                                     colourpicker::colourInput("psb.color", "photosystem II", "#4C8805"),
+                                                                                                     colourpicker::colourInput("rpo.color", "RNA polymerase", "#AE2D29"),
+                                                                                                     colourpicker::colourInput("chl.color", "Chloroplast lipocalin", "#D1382A"),
+                                                                                                     colourpicker::colourInput("rpl.color", "large ribosomal protein", "#9C7A4B"),
+                                                                                                     colourpicker::colourInput("ccs.color", "Copper Chaperone For Superoxide Dismutase", "#4D9E3F")),
+                                                                                              
+                                                                                              column(4, colourpicker::colourInput("atp.color", "ATP synthesis", "#9FBB3D"),
+                                                                                                     colourpicker::colourInput("trn.color", "transfer RNA", "#172C7F"),
+                                                                                                     colourpicker::colourInput("rrn.color", "ribosomal RNA", "#D1382A"),
+                                                                                                     colourpicker::colourInput("pet.color", "cytochrome b/f complex", "#7F992C"),
+                                                                                                     colourpicker::colourInput("ndh.color", "NADH dehydrogenase", "#FEEE50")                                                                                                     ),
+                                                                                              
+                                                                                              column(4, colourpicker::colourInput("rps.color", "ribosomal protein", "#D6AD7C"),
+                                                                                                     colourpicker::colourInput("clp_mat_inf.color", "clpP, matK, infA", "#D9662D"),
+                                                                                                     colourpicker::colourInput("other_gene.color", "other genes", "#7D7D7D"),
+                                                                                                     colourpicker::colourInput("rbc.color", "RubisCO larg subunit", "#4D9E3F"),
+                                                                                                     colourpicker::colourInput("ycf.color", "hypothetical reading frame", "#71B8A9")
+                                                                                                     )),
+                                                                                     tags$h3("Mismatches colors"),
+                                                                                     fluidRow(column(4, colourpicker::colourInput("delete.color", "Delete", "red"),
+                                                                                                     colourpicker::colourInput("midmis.color", "Mismatches in the middle section", "red")),
+                                                                                              column(4, colourpicker::colourInput("insert.color", "Insert", "green")),
+                                                                                              column(4, colourpicker::colourInput("replace.color", "Replace", "yellow"))),
+                                                                                     
+                                                                                     tags$h3("Text and division line colors"),
+                                                                                     fluidRow(column(4, colourpicker::colourInput("misline.color", "Mismatches line", "black"),
+                                                                                                     colourpicker::colourInput("divline.color", "Division line for the regions", "darkgrey")
+                                                                                                     ),
+                                                                                              column(4, colourpicker::colourInput("txtout.color", "Text outside boxes", "black"),
+                                                                                                     colourpicker::colourInput("inbp.color", "Text bp inside regions", "blue")),
+                                                                                              column(4, colourpicker::colourInput("txtin.color", "Text inside boxes", "white"))
+                                                                                              ),)),
+                                                              
+                                                                 shinyjs::hidden(div(id = "try_luck",
+                                                                                     p("Please click the button below if you want different colors..."),
+                                                                                     actionButton("crazy_colors", "Random colors!"),))
+                                                                 )
+                                                ),
+                                       column(6, plotOutput("Plot", width = 96*8.3, height = 96*(2+2)*8.3/12),
+                                              )
+                                       ))
+                            ),
+                   tabPanel('Questions?', br(), 
+                            tags$div(includeMarkdown("./documents/questions.md"), style = "max-width:800px;"),
+                            br(),
+                            tabsetPanel(
+                              tabPanel("FAQ", br(), column(width = 1, ""), 
+                                       br(), tags$div(includeMarkdown("./documents/faq.md"), style = "max-width:800px;"),
+                              ),
+                              tabPanel("Q&A from Github", br(),
+                                       uiOutput("jsonoutput"),)
+                            )),
+                   tabPanel("About", br(), 
+                            tags$div(includeMarkdown("./documents/about.md"), style = "max-width:800px;")
+                            ),
+                   tabPanel("Contact", br(), 
+                            tags$div(includeMarkdown("./documents/contact.md"), style = "max-width:800px;")
+                   )
+                 )
+)
+))
+
+
+#### SERVER SECTION ####
 server <- function(input, output, session) {
-  # # TEST TODO #########################
-  # pos <- 0L
-  # 
-  # # Returns a hex color string, e.g. "#FF0073"
-  # nextColor <- function() {
-  #   # Choose the next color, wrapping around to the start if necessary
-  #   pos <<- (pos %% length(colors)) + 1L
-  #   colors[[pos]]
-  # }
-  # 
-  # observe({
-  #   # Send the next color to the browser
-  #   session$sendCustomMessage("background-color", nextColor())
-  #   
-  #   # Update the color every 100 milliseconds
-  #   invalidateLater(100)
-  # })
-  # # TEST #
-
-  ###Input validator section########################################
+  #### Input validator section ####
   iv <- InputValidator$new()
   iv$add_rule("nGB", sv_between(1, 20))
   iv$add_rule("nManual", sv_between(1, 20))
   iv$enable()
   
-  ###Dynamic UI section#############################################
-  # TODO guardar proceso si eso (nombres de gb y asi, se renderean de nuevo cada vez que sale el numero)
+  #### Dynamic UI section ####
+  # TODO: save the data in case the number of species is changed
   output$dynUIGB <- renderUI({
     if (is.numeric(input$nGB) & input$nGB >= 1 & input$nGB <= 20) {
       row_idx <- seq_len(input$nGB)
@@ -200,7 +507,282 @@ server <- function(input, output, session) {
     }
   })
   
-  ###Remove file section TODO commented bc it is not working ################
+  
+  #### Github isues ####
+  get_all_issues <- function(){
+    req <- httr::GET("https://api.github.com/repos/AmiryousefiLab/IIRscope/issues?state=all")
+    if(httr::status_code(req) == 200){
+      return(httr::content(req))
+    } else {
+      return(NULL)
+    }
+  }
+  
+  issues <- get_all_issues()
+  
+  output$jsonoutput <- renderUI({
+    n_issues <- length(issues)
+    iss <- list()
+    if(n_issues > 0){
+      for (i in 1:n_issues){
+        iss[[i]] <- printIssue(issues[[i]])
+      }
+    } else {
+      return(p('No issues opened in Github! You can open one from the link above.'))
+    }
+    return(iss)
+  })
+  
+  #### Themes section ####
+  default <- data.frame(
+    ir.color <- "orange1", ssc.color <- "lightgreen",
+    lsc.color <- "lightblue",
+    psa.color <- "palevioletred2", psb.color <- "purple2",
+    pet.color <- "#7F992C", atp.color <- "#9FBB3D",
+    ndh.color <- "darkred", rbc.color <- "#4D9E3F",
+    rpo.color <- "#AE2D29", rps.color <- "firebrick1",
+    rpl.color <- "forestgreen", rrn.color <- "deeppink",
+    ycf.color <- "dodgerblue3", trn.color <- "burlywood4",
+    ccs.color <- "goldenrod1", chl.color <- "darkorange1",
+    other_gene.color <- "black",
+    divline.color <- "darkgrey", txtin.color <- "white",
+    inbp.color <- "blue", txtout.color <- "black",
+    misline.color <- "black",
+    delete.color <- "red", insert.color <- "green",
+    replace.color <- "orange", midmis.color <- "black"
+  )
+  #"slateblue4" slategray3 blue3 lightseagreen palevioletred2 navajowhite
+  #navy lightsalmon1
+  
+  # cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+  color_blind <- data.frame(
+    ir.color = "#009E73", ssc.color = "#E69F00",
+    lsc.color = "#56B4E9", 
+    psa.color <- "navy", psb.color <- "purple2",
+    pet.color <- "#7F992C", atp.color <- "#9FBB3D",
+    ndh.color <- "slateblue4", rbc.color <- "#F0E442",
+    rpo.color <- "#AE2D29", rps.color <- "#E69F88",
+    rpl.color <- "#CC79A7", rrn.color <- "deeppink",
+    ycf.color <- "#D55E00", trn.color <- "burlywood4",
+    ccs.color <- "goldenrod1", chl.color <- "darkorange1",
+    other_gene.color <- "black",
+    divline.color <- "darkgrey", txtin.color <- "white",
+    inbp.color <- "white", txtout.color <- "black",
+    misline.color <- "black",
+    delete.color <- "#009E73", insert.color <- "#0072B2",
+    replace.color <- "#D55E00", midmis.color <- "black"
+  )
+  
+  black_white <- data.frame(
+    ir.color = "#505050", ssc.color = "#5A5A5A",
+    lsc.color = "#464646", 
+    psa.color = "#000000", psb.color = "#212121",
+    pet.color = "#242424", atp.color = "#363636",
+    ndh.color = "#484848", rbc.color = "#5A5A5A",
+    rpo.color = "#6C6C6C", rps.color = "#7E7E7E",
+    rpl.color = "#909090", rrn.color = "#D8D8D8",
+    ycf.color = "#B4B4B4", trn.color = "#C6C6C6",
+    ccs.color <- "#A4A4A4", chl.color <- "#B7B7B7",
+    other_gene.color <- "#EAEAEA",
+    divline.color <- "darkgrey", txtin.color <- "white",
+    inbp.color <- "darkgrey", txtout.color <- "black",
+    misline.color <- "black",
+    delete.color <- "#010101", insert.color <- "#707070",
+    replace.color <- "#D5D5D5", midmis.color <- "black"
+    
+  )
+  
+  #ffadad-ffd6a5-fdffb6-caffbf-9bf6ff-a0c4ff-bdb2ff-ffc6ff-fffffc
+  cherry_tree <- data.frame(
+    ir.color = "#FFADAD", ssc.color = "#FFD6A5",
+    lsc.color = "#FDFFB6",
+    psa.color <- "palevioletred2", psb.color <- "purple2",
+    pet.color <- "#7F992C", atp.color <- "#9FBB3D",
+    ndh.color <- "darkred", rbc.color <- "#4D9E3F",
+    rpo.color <- "#AE2D29", rps.color <- "firebrick1",
+    rpl.color <- "forestgreen", rrn.color <- "deeppink",
+    ycf.color <- "dodgerblue3", trn.color <- "burlywood4",
+    ccs.color <- "goldenrod1", chl.color <- "darkorange1",
+    other_gene.color <- "black",
+    divline.color <- "darkgrey", txtin.color <- "black",
+    inbp.color <- "black", txtout.color <- "black",
+    misline.color <- "black",
+    delete.color <- "lightred", insert.color <- "lightgreen",
+    replace.color <- "lightorange", midmis.color <- "black"
+  )
+  
+  #7400b8-6930c3-6930c3-5390d9-6930c3-48bfe3-56cfe1-64dfdf-72efdd-80ffdb
+  sea <- data.frame(
+    ir.color = "#7400b8", ssc.color = "#608CA4",
+    lsc.color = "#1D80A8",
+    psa.color <- "#6930c3", psb.color <- "purple2",
+    pet.color <- "#7F992C", atp.color <- "#9FBB3D",
+    ndh.color <- "#6930c3", rbc.color <- "#4D9E3F",
+    rpo.color <- "#AE2D29", rps.color <- "firebrick1",
+    rpl.color <- "forestgreen", rrn.color <- "deeppink",
+    ycf.color <- "dodgerblue3", trn.color <- "#6930c3",
+    ccs.color <- "#64dfdf", chl.color <- "darkorange1",
+    other_gene.color <- "black",
+    divline.color <- "darkgrey", txtin.color <- "white",
+    inbp.color <- "white", txtout.color <- "black",
+    misline.color <- "black",
+    delete.color <- "red", insert.color <- "green",
+    replace.color <- "lightorange", midmis.color <- "black"
+  )
+  
+  #03071e-370617-6a040f-9d0208-d00000-dc2f02-e85d04-f48c06-faa307-ffba08
+  sunset <- data.frame(
+    ir.color = "#D03B45", ssc.color = "#C81403",
+    lsc.color = "#E03E09",
+    psa.color <- "palevioletred2", psb.color <- "purple2",
+    pet.color <- "#7F992C", atp.color <- "#9FBB3D",
+    ndh.color <- "darkred", rbc.color <- "#4D9E3F",
+    rpo.color <- "#AE2D29", rps.color <- "firebrick1",
+    rpl.color <- "forestgreen", rrn.color <- "deeppink",
+    ycf.color <- "dodgerblue3", trn.color <- "burlywood4",
+    ccs.color <- "goldenrod1", chl.color <- "darkorange1",
+    other_gene.color <- "black",
+    divline.color <- "darkgrey", txtin.color <- "white",
+    inbp.color <- "blue", txtout.color <- "black",
+    misline.color <- "black",
+    delete.color <- "red", insert.color <- "green",
+    replace.color <- "lightorange", midmis.color <- "black"
+  )
+  
+  
+  # theme container
+  theme <- reactiveValues(
+    data = default
+  )
+  
+  observeEvent(input$themes, {
+    if (input$themes == "Random colors"){
+      shinyjs::hide(id = "customize_theme")
+      shinyjs::show(id = "try_luck")
+      cl <- sample(0:255, 42)
+      
+      theme$data <- data.frame(ir.color = rgb(cl[16],cl[17],cl[18], maxColorValue = 255),
+                               ssc.color = rgb(cl[19],cl[20],cl[21], maxColorValue = 255),
+                               lsc.color = rgb(cl[22],cl[23],cl[24], maxColorValue = 255),
+                               psa.color = "#2A6332", psb.color = "#4C8805",
+                               pet.color = "#7F992C", atp.color = "#9FBB3D",
+                               ndh.color = "#FEEE50", rbc.color = "#4D9E3F",
+                               rpo.color = "#AE2D29", rps.color = "#D6AD7C",
+                               rpl.color = "#9C7A4B", 
+                               ycf.color = "#71B8A9", trn.color = "#172C7F",
+                               ccs.color <- "goldenrod1", chl.color <- "darkorange1",
+                               rrn.color = "#D1382A", other_gene.color = "#7D7D7D",
+                               divline.color <- "darkgrey", txtin.color <- "white",
+                               inbp.color <- "blue", txtout.color <- "black",
+                               misline.color <- "black",
+                               delete.color <- "red", insert.color <- "green",
+                               replace.color <- "lightorange", midmis.color <- "black")
+      observeEvent(input$crazy_colors, {
+        cl <- sample(0:255, 42)
+        theme$data <- data.frame(ir.color = rgb(cl[16],cl[17],cl[18], maxColorValue = 255),
+                                 ssc.color = rgb(cl[19],cl[20],cl[21], maxColorValue = 255),
+                                 lsc.color = rgb(cl[22],cl[23],cl[24], maxColorValue = 255),
+                                 psa.color = "#2A6332", psb.color = "#4C8805",
+                                 pet.color = "#7F992C", atp.color = "#9FBB3D",
+                                 ndh.color = "#FEEE50", rbc.color = "#4D9E3F",
+                                 rpo.color = "#AE2D29", rps.color = "#D6AD7C",
+                                 rpl.color = "#9C7A4B", 
+                                 ycf.color = "#71B8A9", trn.color = "#172C7F",
+                                 ccs.color <- "goldenrod1", chl.color <- "darkorange1",
+                                 rrn.color = "#D1382A", other_gene.color = "#7D7D7D",
+                                 divline.color <- "darkgrey", txtin.color <- "white",
+                                 inbp.color <- "blue", txtout.color <- "black",
+                                 misline.color <- "black",
+                                 delete.color <- "red", insert.color <- "green",
+                                 replace.color <- "lightorange", midmis.color <- "black")
+      })
+    } 
+    
+    else if (input$themes == "Customize"){
+      shinyjs::hide(id = "try_luck")
+      shinyjs::show(id = "customize_theme")
+      observeEvent(eventExpr = {
+        input$ir.color
+        input$ssc.color
+        input$lsc.color
+        input$psa.color
+        input$psb.color
+        input$pet.color
+        input$atp.color
+        input$ndh.color
+        input$rbc.color
+        input$rpo.color
+        input$rps.color
+        input$rpl.color
+        input$ycf.color
+        input$trn.color
+        input$rrn.color
+        input$ccs.color
+        input$chl.color
+        input$other_gene.color
+        input$divline.color
+        input$txtin.color
+        input$inbp.color
+        input$txtout.color
+        input$delete.color
+        input$insert.color
+        input$replace.color
+        input$misline.color
+        input$midmis.color
+      },
+      handlerExpr = {
+        theme$data <- data.frame(ir.color = input$ir.color, ssc.color = input$ssc.color,
+                                 lsc.color = input$lsc.color,
+                                 psa.color = input$psa.color, psb.color = input$psb.color,
+                                 pet.color = input$pet.color, atp.color = input$atp.color,
+                                 ndh.color = input$ndh.color, rbc.color = input$rbc.color,
+                                 rpo.color = input$rpo.color, rps.color = input$rps.color,
+                                 rpl.color = input$rpl.color, ycf.color = input$ycf.color, 
+                                 trn.color = input$trn.color, rrn.color = input$rrn.color, 
+                                 other_gene.color = input$other_gene.color,
+                                 ccs.color = input$ccs.color, chl.color = input$chl.color,
+                                 divline.color = input$divline.color, 
+                                 txtin.color = input$txtin.color,
+                                 inbp.color = input$inbp.color, 
+                                 txtout.color = input$txtout.color,
+                                 misline.color = input$misline.color,
+                                 delete.color <- input$delete.color, 
+                                 insert.color <- input$insert.color,
+                                 replace.color <- input$replace.color, 
+                                 midmis.color <- input$midmis.color)
+        })
+    }
+    else {
+      shinyjs::hide(id = "try_luck")
+      shinyjs::hide(id = "customize_theme")
+      theme$data <- switch(input$themes,
+                           Default = default,
+                           "Color blind friendly" = color_blind,
+                           "B&W" = black_white,
+                           "Cherry tree" = cherry_tree,
+                           Sea = sea,
+                           Sunset = sunset)
+    }
+  })
+  
+  
+  #### Sample (2 species) plot in coloring ####
+  # Showing plot in coloring tab
+  output$Plot <- renderPlot({
+    if(input$Gbsub){
+      showNotification("Generating plot...", duration = NULL, id = "message")
+      IRs2(theme = theme$data, sample = TRUE)
+      showNotification("Plot generated", duration = 2, id = "message")
+    } else if(input$Go){
+      showNotification("Generating plot...", duration = NULL, id = "message")
+      IRsD2(theme = theme$data, sample = TRUE)
+      showNotification("Plot generated", duration = 2, id = "message")
+    }
+  }, width = 96*8.3, height = 96*(2+2)*8.3/12)
+
+  
+  
+  #### Remove file section TODO: not working ################
   # values <- reactiveValues(
   #   upload_state = NULL
   # )
@@ -236,21 +818,21 @@ server <- function(input, output, session) {
   
   
   
-  ###GB File section#############################################
-  ###Status update for the GB file submission
+  #### GB File section#############################################
+  # Status update for the GB file submission
   output$StatusGB <- renderText({
     if(input$Gbsub){
       paste("Thank you for your Manual submission at", paste0(date(), "!"),
-            "\nYou may now download your plot via the tab below.", sep= " ")
+            "\nYou may now download your plot via the tab below.")
     }
   })
   
   
-  ####Calculating the IR values with IRs in a pseudo text function in the GB file section
+  # Calculating the IR values with IRs in a pseudo text function in the GB file section
   output$StatusGB2 <- renderText({
     if(input$Gbsub){
       tryCatch({
-        rm(list = c('FasList', 'IRList', 'GeneList', 'spnames', 'l', 'nuclw'))
+        rm(list = c('FasList', 'IRList', 'GeneList', 'spnames', 'l', 'nuclw', 'IndelList'))
       })
       
       gbfiles <- isolate(gb())
@@ -262,21 +844,41 @@ server <- function(input, output, session) {
                    detail = paste0('This may take a while... 0/', l))
       
       dist<- isolate(IRs(gbfiles, SRev(), progress))
+      
+      if(anyNA(IRList, recursive= TRUE)){
+        names(IRList) <- unlist(spnames)
+        noIR <- c()
+        for (i in 1:l){
+          if(anyNA(IRList[i], recursive= TRUE) == TRUE){
+            noIR <- append(noIR, paste('\n', paste0(i, '.'), names(IRList)[i]))
+          }
+        }
+        
+        text <- "No IR was found for the following samples:"
+        for (i in 1:length(noIR)){
+          text <- paste(text, noIR[i])
+        }
+        shinyalert("Warning!", paste0(text, '\nPlease, run it again without those samples.'), 
+                   type = "warning")
+      } else {
+        I<-   Max.Radius(1, l, genelist = GeneList, IRlist = IRList)
+        II<-  Max.Radius(2, l, genelist = GeneList, IRlist = IRList)
+        III<- Max.Radius(3, l, genelist = GeneList, IRlist = IRList)
+        IV<-  Max.Radius(4, l, genelist = GeneList, IRlist = IRList)
+        
+        if (length(unique(I)) != 1 || length(unique(II)) != 1
+            || length(unique(III)) != 1 || length(unique(IV)) != 1){
+          shinyalert("Warning!", "The spacing around the junction is not in scale.
+                     Refer to the FAQ to see why.", type = "warning")
+        }
+      }
+      
       return(dist)
     }
   })
   
-  # TODO
-  # output$Plot <- renderPlot({
-  #   if(input$Gbsub){
-  #     showNotification("Generating plot...", duration = NULL, id = "message")
-  #     IRs2()
-  #     showNotification("Plot generated", duration = 2, id = "message")
-  #   }
-  # })
   
-  
-  ###Downloading the result with the Download botton in the GB files section
+  # Downloading the result with the Download botton in the GB files section
   output$downloadData <- downloadHandler(
     filename = function(){
       return(paste('IR', input$file_type, sep="."))
@@ -284,27 +886,20 @@ server <- function(input, output, session) {
     content = function(file){
       showNotification("Downloading plot...", duration = NULL, id = "message")
       
-      # dev.new(width, height)
-      
       if (input$file_type  == "pdf") {
         grDevices::pdf(file, width=8.3, height=(l+2)*8.3/12)
       } else {
         do.call(input$file_type, args=list(filename=file,
                                            width = 8.3, height = (l+2)*8.3/12,
                                            units = "in", res = 300))
-        
       }
-      IRs2(file=file)
-      # if(IRs2(file=file)){
-      #   shinyalert("Warning!", "The spacing around the junction is not in scale.
-      #              Refer to the FAQ to see why.", type = "warning")
-      # }
+      IRs2(file = file, theme = theme$data)
       while (!is.null(dev.list())) dev.off()
       removeNotification(id = "message")
     }
   )
   
-  ###Reactive list of the objects needed for the calculation of this section i.e. GB files
+  # Reactive list of the objects needed for the calculation of this section i.e. GB files
   gb <- reactive({
     gbFiles <- list()
     
@@ -328,6 +923,7 @@ server <- function(input, output, session) {
     gbFiles[which(gbFiles!="NULL")]
   })
   
+  # Which files are to be SSC reversed
   SRev <- reactive({
     SFiles<- list()
     
@@ -341,69 +937,116 @@ server <- function(input, output, session) {
   
   
   
-  ###Dogma File section#############################################
+  #### Dogma File section#############################################
   
-  ###Status file for the submission of the files
+  # Status for the submission of the files
   output$Status<- renderText({
     if(input$Go){
       paste("Thank you for your Manual submission at", paste0(date(), "!"),
-            "You may now download your plot via the tab below.", sep= " ")
+            "\nYou may now download your plot via the tab below.")
     }
   })
   
   
-  
-  ###Calculating the IR with the IRsD in a pseudo text function in the Dogma section
+  # Calculating the IR with the IRsD in a pseudo text function in the Dogma section
   output$Status2<- renderText({
     if(input$Go){
-      dist <- isolate(IRsD(df(), ff(),  ii(), nf(), file=file))
-      dist
+      tryCatch({
+        rm(list = c('FasList', 'IRListDinp', 'GeneList', 'spnames', 'l', 'nuclw', 'IndelList')) # TODO: might not be needed
+      })
+      dogmafiles <- isolate(df())
+      l <- length(dogmafiles)
+      
+      progress <- Progress$new(session, min=0, max=l)
+      on.exit(progress$close())
+      progress$set(message = 'Calculation in progress',
+                   detail = paste0('This may take a while... 0/', l))
+      
+      
+      dist <- isolate(IRsD(dogmafiles, ff(),  ii(), nf(), progress))
+      
+      if(anyNA(IRListDinp, recursive= TRUE)){
+        names(IRListDinp) <- unlist(spnames)
+        noIR <- c()
+        for (i in 1:l){
+          if(anyNA(IRListDinp[i], recursive= TRUE) == TRUE){
+            noIR <- append(noIR, paste('\n', paste0(i, '.'), names(IRListDinp)[i]))
+          }
+        }
+        
+        text <- "No IR was found for the following samples:"
+        for (i in 1:length(noIR)){
+          text <- paste(text, noIR[i])
+        }
+        shinyalert("Warning!", paste0(text, '\nPlease, run it again without those samples.'), 
+                   type = "warning")
+      } else {
+        I<-   Max.RadiusDinp(1, l, genelist = GeneList, IRlistDinp = IRListDinp)
+        II<-  Max.RadiusDinp(2, l, genelist = GeneList, IRlistDinp = IRListDinp)
+        III<- Max.RadiusDinp(3, l, genelist = GeneList, IRlistDinp = IRListDinp)
+        IV<-  Max.RadiusDinp(4, l, genelist = GeneList, IRlistDinp = IRListDinp)
+        
+        if (length(unique(I)) != 1 || length(unique(II)) != 1
+            || length(unique(III)) != 1 || length(unique(IV)) != 1){
+          shinyalert("Warning!", "The spacing around the junction is not in scale.
+                     Refer to the FAQ to see why.", type = "warning")
+        }  
+      }
+      
+      return(dist)
     }
   })
   
-  ###Downloading the result with the Download botton in the DOGMA files section
+  # Downloading the result with the Download button in the DOGMA files section
   output$Down <- downloadHandler(
-    filename = "IR.pdf",
-    content = function(file) {
-      #mboard(datagb(), file = file)
-      isolate(IRsD2(df(), file=file))
-      #jpeg(file,  width=8.3, height=8.9, units="in", res=100)
-      #plot(rnorm(100))
-      #dev.off()
+    filename = function(){
+      return(paste('IR', input$file_typeD, sep="."))
+    },
+    content = function(file){
+      showNotification("Downloading plot...", duration = NULL, id = "message")
+
+      if (input$file_typeD  == "pdf") {
+        grDevices::pdf(file, width=8.3, height=(l+2)*8.3/12)
+      } else {
+        do.call(input$file_typeD, args=list(filename=file,
+                                           width = 8.3, height = (l+2)*8.3/12,
+                                           units = "in", res = 300))
+      }
+      IRsD2(file=file, theme = theme$data)
+      while (!is.null(dev.list())) dev.off()
+      removeNotification(id = "message")
     }
   )
   
   
-  ###Reactive list of objects for the calculation of this section
-  ###df for dogma files
+  # Reactive list of objects for the calculation of this section
+  # df for dogma files
   df <- reactive({
     dFiles<- list()
     
     for (i in seq_len(input$nManual)) {
       inFilei <- input[[paste0("dogma", i)]]
       if (is.data.frame(inFilei)) {
-        dFiles[[i]]<-GnlBuilder(trnDogma(read.table(inFile$datapath)))
+        dFiles[[i]]<-GnlBuilder(trnDogma(read.table(inFilei$datapath)))
       }
     }
-    
     dFiles[which(dFiles!="NULL")]
   })
   
-  ###ff for fasta files
+  # ff for fasta files
   ff <- reactive({
     fFiles<- list()
     
     for (i in seq_len(input$nManual)) {
       inFilei <- input[[paste0("fas", i)]]
       if (is.data.frame(inFilei)) {
-        fFiles[[i]]<-rdnFixerD(as.character(read.fasta(inFile$datapath)[[1]]))
+        fFiles[[i]] <- inFilei$datapath
       }
     }
-    
     fFiles[which(fFiles!="NULL")]
   })
   
-  ###ii for IR info
+  # ii for IR info
   ii <- reactive({
     iFiles<- list()
     
@@ -414,14 +1057,14 @@ server <- function(input, output, session) {
         iFiles[[i]]<- 999
       }
       else if(input[[paste0("IR", i)]] != ""){
-        iFiles[[i]]<- c(as.numeric(unlist(strsplit(input[[paste0("IR", i)]], split = ","))) , length(as.character(read.fasta(inFilei$datapath)[[1]])))
+        iFiles[[i]]<- c(as.numeric(unlist(strsplit(input[[paste0("IR", i)]], split = ","))), length(as.character(read.fasta(inFilei$datapath)[[1]])))
       }
     }
     
     iFiles[which(iFiles!="NULL")]
   })
   
-  ###nf for the names of the species
+  # nf for the names of the species
   nf<- reactive({
     nFiles<- list()
     
@@ -435,12 +1078,7 @@ server <- function(input, output, session) {
     nFiles[which(nFiles!="NULL")]
   })
   
-  
-  
-  #output$markdown <- renderUI({
-  #  HTML(markdown::markdownToHTML(knit('Rmarkdown.Rmd', quiet = TRUE)))
-  #})
-  
+  #### File downloading section ####
   
   # doog <- readLines("dogma.txt")
   # 
@@ -466,33 +1104,18 @@ server <- function(input, output, session) {
   # )
   
   ###Downloading the first PIC
-  output$downloadPIC2 <- downloadHandler(
-    filename = function() {
-      paste("IR2example-", Sys.Date(), ".jpg", sep="")
-    },
-    content = function(file) {
-      writeJPEG(pic2, file)
-    }
-  )
+  # output$downloadPIC2 <- downloadHandler(
+  #   filename = function() {
+  #     paste("IR2example-", Sys.Date(), ".jpg", sep="")
+  #   },
+  #   content = function(file) {
+  #     writeJPEG(pic2, file)
+  #   }
+  # )
   
+  #### Updating the section areas of the browsed files in GB section ####
   
-  ###Downloading the R codes
-  ### TODO IRscope.R es parte no todo
-  data <- readLines("IRscope.R")
-  
-  output$downloadDat <- downloadHandler(
-    filename = function() {
-      paste("data-", Sys.Date(), ".R", sep="")
-    },
-    content = function(file) {
-      writeLines(data, file)
-    }
-  )
-  
-  
-  ### Updating the section areas of the browsed files in GB section
-  
-  ## TODO ahora 1:20 pero mejor seq_len(input$nGB) pero pide reactive
+  ## TODO: change 1:20 to 1:seq_len(input$nGB) (asks for reactive)
   lapply(1:20, function(i) {
     output[[paste0("sp",i)]] <- renderText({
       if (input[[paste0("acc",i)]] != "") {
@@ -506,7 +1129,6 @@ server <- function(input, output, session) {
       }
     })
   })
-  
 }
 
 shinyApp(ui, server)

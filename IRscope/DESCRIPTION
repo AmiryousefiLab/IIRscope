@@ -1,0 +1,12 @@
+Package: irscope
+Type: Package
+Title: A package to plot IR sections.
+Version: 1.0
+Author: Carmen Diez, Ali Amiryousefi.
+Depends: R (>= 3.6.0)
+Imports: dplyr, magrittr, Biostrings, genbankr, coRdon, grDevices, reutils, stringr, pkgload, rmarkdown, shape, diagram, gplots
+Description: It is a package to plot IR sections.
+License: University of Helsinki
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
