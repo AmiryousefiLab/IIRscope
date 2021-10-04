@@ -23,7 +23,7 @@ You can either use the web application at [https://irscope.shinyapps.io/irscope-
 
 There are two main parts:
 
-- **Related to the Shiny app**: `app.R` file to set up the UI and server for the web application.
+- **Related to the Shiny app**: `app` file to set up the UI and server for the web application.
 - **IRscope R package**: in *IRscope/* folder. It wraps all the functions used by the program to find the IR, mismatches and for the plotting. It contains several files:
     - `imports`: libraries used by the package.
     - `read_gb_file`: functions to fetch or read the gbfiles.
@@ -50,5 +50,5 @@ Publication at Bioinformatics <https://academic.oup.com/bioinformatics/article/3
 
 * [Chloroplot](https://github.com/shuyuzheng/Chloroplot/): visualizing organelle genomes.
 * University of Helsinki.
-* [Img Shields](https://shields.io): web up symbol.
+* [Img Shields](https://shields.io): web working symbol.
 * [Freepik icons](https://www.flaticon.com/authors/freepik): SVG icons in *Coloring* section from [Flaticon](https://www.flaticon.com/).
