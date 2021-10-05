@@ -6,6 +6,8 @@ library(shinyalert)
 library(purrr)
 library(seqinr)
 library(colourpicker)
+library(markdown)
+library(rmarkdown)
 
 library(httpuv)
 
