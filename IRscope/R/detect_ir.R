@@ -35,31 +35,42 @@ get_ir <- function(genome){
     ir <<- irDetect(genome, seed.size = 1000)
   })
   
-  ir_table <- ir$ir_table
-  
+  return(ir)
+}
+
+#' Transforms ir_table to a matrix.
+#'
+#' @param ir_table dataframe with the ir info obtained with \code{\link{get_ir}}.
+#' @param genome_length A number. Indicates the genome length.
+#'
+#' @return A list with:
+#' \itemize{
+#'    \item IRA_start: gene where IRA starts.
+#'    \item IRB_start: gene where IRB starts.
+#'    \item IR_len: length of the inverted repeats.
+#'    \item gene_len: length of the genome.
+#' }
+get_ir_positions <- function(ir_table, genome_length){
   IRA <- ir_table[ir_table$name == 'IRA', ]
   IRB <- ir_table[ir_table$name == 'IRB', ]
   
   if(nrow(IRA) == 1) {
-    IRA_start <- IRA$start + 1
+    IRA_start <- IRA$start #+ 1
     IR_len <- as.numeric(IRA$length)
   } else {
-    IRA_start <- IRA$start[2] + 1
+    IRA_start <- IRA$start[2] #+ 1
     IR_len <- as.numeric(IRA$length[1])
   }
   
   if(nrow(IRB) == 1) {
-    IRB_start <- IRB$start + 1
+    IRB_start <- IRB$start #+ 1
   } else {
-    IRB_start <- IRB$start[2] + 1
+    IRB_start <- IRB$start[2] #+ 1
   }
   
-  l <- Biostrings::nchar(genome)
-  
   print(ir$indel_table)
-  print(c(IRA_start, IRB_start, IR_len, l))
-  res <- list(indel_table = ir$indel_table, ir_table = c(IRA_start, IRB_start, IR_len, l))
-  return(res)
+  print(c(IRA_start, IRB_start, IR_len, genome_length))
+  return(c(IRA_start, IRB_start, IR_len, genome_length))
 }
 
 #' Generate information for the IR region.

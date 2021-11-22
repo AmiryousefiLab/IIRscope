@@ -33,27 +33,51 @@ IRs<- function(gbfiles, Sfiles, progress){
     data <- get_data_from_gb(gb.info$gbfile, gb.info$local.file)
     
     res <- get_ir(data$genome)
-    IRList[[i]] <<- res$ir_table
+    genome_length <- Biostrings::nchar(data$genome)
+    
+    IRList[[i]] <<- get_ir_positions(res$ir_table, genome_length)
     if(is.null(res$indel_table)){
       IndelList[[i]] <<- NA
     } else {
       IndelList[[i]] <<- res$indel_table
     }
     
-    # gets data in the needed format to get the genes. 
-    #   TODO: change gene.cordinates, sp.name... to receive the same kind of data as above.
+    # GeneList[[i]] <<- gene.cordinates(gb.data)
+    
+    # if ssc reversion was ticked, it reverses that part in the gene list
+    #   TODO: join reverse regions functions to work as one.
+    rev <- Sfiles[[i]]
+    gene_table <- data$gene_table
+    
+    if(is.data.frame(data$gene_table)){
+      if (rev){
+        data_rev <<- convert_region(ir_table = res$ir_table, genome_length, 
+                                         region = "SSC", genome = data$genome, 
+                                         gene_table = gene_table, 
+                                         indel_table = res$indel_table)
+        gene_table <- data_rev$gene_table
+        
+        if(!is.null(res$indel_table)){
+          IndelList[[i]] <<- data_rev$indel_table
+        }
+      }
+      GeneList[[i]] <<- toGeneList(gene_table)
+    } else {
+      # If it's not a dataframe it has to use another function
+      GeneList[[i]] <<- gene_table
+      if (rev){
+        GeneList[[i]]<<- SSCrev(GeneList[[i]], (IRList[[i]][1]+IRList[[i]][3]), IRList[[i]][2])
+      }
+    }
+
+    # gets data in the needed format to get more information 
+    #   TODO: change sp.name, rdnFixer... to receive the same kind of data as above or skip them.
     if(gb.info$local.file) {
       gb.data <- read.gb(gb.info$gbfile)
     } else {
       gb.data <- fetch.gb(gb.info$gbfile)
     }
-    GeneList[[i]] <<-gene.cordinates(gb.data)
     
-    # if ssc reversion was ticked, it reverse that part in the gene list
-    rev <- Sfiles[[i]]
-    if (rev){
-      GeneList[[i]]<<- SSCrev(GeneList[[i]], (IRList[[i]][1]+IRList[[i]][3]), IRList[[i]][2])
-    }
     spnames[[i]]<<- sp.name(gb.data)
     
     FasList[[i]]<<- rdnFixer(gb.data)
@@ -88,6 +112,30 @@ toIRinfo <- function(IRDinp){
 #' @return vector with ira ini, ira end, irb ini, irb end, len genome
 toIRDinp <- function(IRinfo){
   return(c(IRinfo[1], IRinfo[1]+IRinfo[3], IRinfo[2], IRinfo[2]+IRinfo[3], IRinfo[4]))
+}
+
+# TODO: use gene_table everywhere instead of the old matrix. Adapt code to not 
+#       use these two 0's columns anymore in the matrix.
+
+#' Transform gene_table data.frame to a matrix with less info used in the old functions
+#'
+#' @param gene_table data.frame with the gene information. The columns used in this
+#'  function are 1 (start), 2 (end) and 4 (gene name).
+#' @return matrix with the following columns: gene_name, start, end, 0's and 0's 
+#' (these 0's columns are there for convenience with the old format).
+toGeneList <- function(gene_table){
+  # We transform the dataframe into a matrix with only the data we are interested:
+  #   gene_name, start and end.
+  m <- as.matrix(subset(gene_table, select=c(4,1,2)))
+  # We make sure data types are correct
+  m[,1] <- as.character(m[,1])
+  m[,2] <- as.integer(m[,2])
+  m[,3] <- as.integer(m[,3])
+  
+  # We add two empty columns for convenience
+  m <- cbind(m, replicate(2, numeric(NROW(m))))
+  
+  return(m)
 }
 
 
@@ -128,8 +176,12 @@ IRsD<- function(dgfiles, fastafiles, irfiles, nfiles, progress){
       #   TODO: change functions to accept either one IRinfo format or the other
       #         and not be repeated.
       genome <- readDNAStringSet(FasList[[i]])[[1]]
+      
       res <- get_ir(genome)
-      sss <- res$ir_table
+      genome_length <- Biostrings::nchar(genome)
+      
+      sss <<- get_ir_positions(res$ir_table, genome_length)
+
       IRListDinp[[i]] <<- c(sss[1], sss[1]+sss[3], sss[2], sss[2]+sss[3], sss[4])
       if(is.null(res$indel_table)){
         IndelList[[i]] <<- NA
