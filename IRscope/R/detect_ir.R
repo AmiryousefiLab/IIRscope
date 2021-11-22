@@ -35,6 +35,8 @@ get_ir <- function(genome){
     ir <<- irDetect(genome, seed.size = 1000)
   })
   
+  print('Indel table:')
+  print(ir$indel_table)
   return(ir)
 }
 
@@ -68,7 +70,7 @@ get_ir_positions <- function(ir_table, genome_length){
     IRB_start <- IRB$start[2] #+ 1
   }
   
-  print(ir$indel_table)
+  print('IRA start, IRB start, IR length, genome length:')
   print(c(IRA_start, IRB_start, IR_len, genome_length))
   return(c(IRA_start, IRB_start, IR_len, genome_length))
 }
