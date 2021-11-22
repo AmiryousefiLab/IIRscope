@@ -600,15 +600,13 @@ codonUsage <- function(cds, genome){
 #' 
 SSCrev<- function(genecord, SSCs, SSCe){
   g<- genecord
-  a<- SSCs
-  b<- SSCe
+  a<- SSCs # SSC ini
+  b<- SSCe # SSC end
   g[, 2]<- as.numeric(g[,2])
   g[, 3]<- as.numeric(g[,3])
   g[, 4]<- as.numeric(g[,4])
   g[, 5]<- as.numeric(g[,5])
   for (i in 1:length(g[,1])){
-    
-    #if the two values of the second and third column are in the SSC, then reverse them
     if(max(g[i, 2], g[i, 3]) <= b  && min(g[i, 2], g[i, 3]) >= a){
       g[i, 2]<- paste(b-(as.numeric(g[i, 2])-a))
       g[i, 3]<- b-(as.numeric(g[i, 3])-a)
@@ -639,9 +637,10 @@ SSCrev<- function(genecord, SSCs, SSCe){
     }
     
     
-    
-    ###for the 4th and 5th columns
-    
+    ### for the 4th and 5th columns
+    # if(g[i,4] != 0 && g[i,5] != 0){
+    #   
+    # }
     #if the two values of the second and third column are in the SSC, then reverse them
     if(max(g[i, 4], g[i, 5]) <= b  && min(g[i, 4], g[i, 5]) >= a){
       g[i, 4]<- paste(b-(as.numeric(g[i, 4])-a))
@@ -671,7 +670,6 @@ SSCrev<- function(genecord, SSCs, SSCe){
       g[i, 4]<- b-(as.numeric(g[i,4])-a)
       g[i, 5]<- b+(a-as.numeric(g[i,5]))
     }
-    
   }
   g[, 2]<- as.character(g[,2])
   g[, 3]<- as.character(g[,3])
