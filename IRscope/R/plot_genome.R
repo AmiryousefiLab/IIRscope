@@ -224,7 +224,7 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
              or 4 for JLB, JSB, JSA, and JLA, recpectively ")
   }
   
-  if(!is.null(mid_inside)){
+  if(NROW(mid_inside) > 0){
     mismatches <- unique(mid_inside$mismatch_type)
     txt <- NULL
     if(is.element('replace', mismatches)){
