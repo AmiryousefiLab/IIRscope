@@ -657,7 +657,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
 #' @return list with the radius for each species (the same if they are similar,
 #' different if they are not similar species).
 #' @export
-Max.Radius <- function(J.pos, l, genelist, IRlist){
+Max.Radius <- function(J.pos, l, genelist, irlist){
   if(J.pos==1){ # TODO: cambiar Radius0
     Radius0<-550#680
   }
@@ -673,11 +673,11 @@ Max.Radius <- function(J.pos, l, genelist, IRlist){
   R <- numeric(l)
   for (track in 1:l){
     Radius <- Radius0
-    t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
+    t<- JunctRadiusGeneFinder(genelist[[track]], irlist[[track]], J.pos , Radius)
     # if it doesn't find any gene, it tries with a bigger radius
     while(nrow(t)==0){
       Radius<- 1.2*Radius
-      t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
+      t<- JunctRadiusGeneFinder(genelist[[track]], irlist[[track]], J.pos , Radius)
     }
     R[track]<-Radius
   }
@@ -856,10 +856,10 @@ IRs2<- function(file="IR_out", theme, sample = FALSE){
     points(0, 4.5, cex=2.3, pch=18, col="white")
     
     # radius for each junction
-    I<-   Max.Radius(1, l_aux, genelist = GeneList, IRlist = IRList)
-    II<-  Max.Radius(2, l_aux, genelist = GeneList, IRlist = IRList)
-    III<- Max.Radius(3, l_aux, genelist = GeneList, IRlist = IRList)
-    IV<-  Max.Radius(4, l_aux, genelist = GeneList, IRlist = IRList)
+    I<-   Max.Radius(1, l_aux, genelist = GeneList, irlist = IRList)
+    II<-  Max.Radius(2, l_aux, genelist = GeneList, irlist = IRList)
+    III<- Max.Radius(3, l_aux, genelist = GeneList, irlist = IRList)
+    IV<-  Max.Radius(4, l_aux, genelist = GeneList, irlist = IRList)
     
     # plot genes and information around the junction
     plot.data.aux(I, 1, l_aux, jlens, theme)
@@ -1458,7 +1458,7 @@ JD.plotterDinp<- function(Radius, J.pos, track, jlens){
 #' @return list with the radius for each species (the same if they are similar,
 #' different if they are not similar species).
 #' @export
-Max.RadiusDinp<-function(J.pos, l, genelist, IRlistDinp){
+Max.RadiusDinp<-function(J.pos, l, genelist, irlistDinp){
   if(J.pos==1){
     Radius0<-680#680#100
   }
@@ -1474,10 +1474,10 @@ Max.RadiusDinp<-function(J.pos, l, genelist, IRlistDinp){
   R<- numeric(l)
   for (track in 1:l){
     Radius <- Radius0
-    t<- JunctRadiusGeneFinder(GeneList[[track]], toIRinfo(IRListDinp[[track]]), J.pos , Radius)
+    t<- JunctRadiusGeneFinder(genelist[[track]], toIRinfo(irlistDinp[[track]]), J.pos , Radius)
     while(nrow(t)==0){
       Radius<- Radius+(0.2)*Radius
-      t<- JunctRadiusGeneFinder(GeneList[[track]], toIRinfo(IRListDinp[[track]]), J.pos , Radius)
+      t<- JunctRadiusGeneFinder(genelist[[track]], toIRinfo(irlistDinp[[track]]), J.pos , Radius)
     }
     R[track]<-Radius
   }
@@ -1637,10 +1637,10 @@ IRsD2<- function(file="IR_out", theme, sample = FALSE){
     points(0, 4.5, cex=2.3, pch=18, col="white")
     
     # radius for each junction
-    I<-   Max.RadiusDinp(1, l, genelist = GeneList, IRlistDinp = IRListDinp)
-    II<-  Max.RadiusDinp(2, l, genelist = GeneList, IRlistDinp = IRListDinp)
-    III<- Max.RadiusDinp(3, l, genelist = GeneList, IRlistDinp = IRListDinp)
-    IV<-  Max.RadiusDinp(4, l, genelist = GeneList, IRlistDinp = IRListDinp)
+    I<-   Max.RadiusDinp(1, l, genelist = GeneList, irlistDinp = IRListDinp)
+    II<-  Max.RadiusDinp(2, l, genelist = GeneList, irlistDinp = IRListDinp)
+    III<- Max.RadiusDinp(3, l, genelist = GeneList, irlistDinp = IRListDinp)
+    IV<-  Max.RadiusDinp(4, l, genelist = GeneList, irlistDinp = IRListDinp)
     
     # plot genes and information around the junction
     plot.data.aux.D(I, 1, l, jlens, theme)

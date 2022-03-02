@@ -862,10 +862,10 @@ server <- function(input, output, session) {
         shinyalert("Warning!", paste0(text, '\nPlease, run it again without those samples.'), 
                    type = "warning")
       } else {
-        I<-   Max.Radius(1, l, genelist = GeneList, IRlist = IRList)
-        II<-  Max.Radius(2, l, genelist = GeneList, IRlist = IRList)
-        III<- Max.Radius(3, l, genelist = GeneList, IRlist = IRList)
-        IV<-  Max.Radius(4, l, genelist = GeneList, IRlist = IRList)
+        I<-   Max.Radius(1, l, genelist = GeneList, irlist = IRList)
+        II<-  Max.Radius(2, l, genelist = GeneList, irlist = IRList)
+        III<- Max.Radius(3, l, genelist = GeneList, irlist = IRList)
+        IV<-  Max.Radius(4, l, genelist = GeneList, irlist = IRList)
         
         if (length(unique(I)) != 1 || length(unique(II)) != 1
             || length(unique(III)) != 1 || length(unique(IV)) != 1){
@@ -982,10 +982,10 @@ server <- function(input, output, session) {
         shinyalert("Warning!", paste0(text, '\nPlease, run it again without those samples.'), 
                    type = "warning")
       } else {
-        I<-   Max.RadiusDinp(1, l, genelist = GeneList, IRlistDinp = IRListDinp)
-        II<-  Max.RadiusDinp(2, l, genelist = GeneList, IRlistDinp = IRListDinp)
-        III<- Max.RadiusDinp(3, l, genelist = GeneList, IRlistDinp = IRListDinp)
-        IV<-  Max.RadiusDinp(4, l, genelist = GeneList, IRlistDinp = IRListDinp)
+        I<-   Max.RadiusDinp(1, l, genelist = GeneList, irlistDinp = IRListDinp)
+        II<-  Max.RadiusDinp(2, l, genelist = GeneList, irlistDinp = IRListDinp)
+        III<- Max.RadiusDinp(3, l, genelist = GeneList, irlistDinp = IRListDinp)
+        IV<-  Max.RadiusDinp(4, l, genelist = GeneList, irlistDinp = IRListDinp)
         
         if (length(unique(I)) != 1 || length(unique(II)) != 1
             || length(unique(III)) != 1 || length(unique(IV)) != 1){
