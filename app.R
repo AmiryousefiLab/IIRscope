@@ -59,7 +59,6 @@ printIssue <- function(issue) {
 #### UI SECTION ####
 ui <- fluidPage(
   br(),
-  useShinyalert(),
   shinyjs::useShinyjs(),
   HTML('<!DOCTYPE html>
        <html>

@@ -131,7 +131,7 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){
+    if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       for (j in seq(0.10, 0.70, 0.05)){
@@ -358,7 +358,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){
+    if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       if (min(x1, x2) >= 104){
@@ -456,7 +456,7 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
     Pcord[Pcord < 0] <- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
-    if(Rcord[i,1] > Rcord[i,2]){
+    if(Rcord[i,1] > Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       if (Rcord[i,1] > J & Rcord[i,2] <J ){
@@ -549,7 +549,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   }
   counter<- 0
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){
+    if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       if (Rcord[i,1] > J & Rcord[i,2] <J ){
@@ -658,7 +658,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
 #' different if they are not similar species).
 #' @export
 Max.Radius <- function(J.pos, l, genelist, IRlist){
-  if(J.pos==1){
+  if(J.pos==1){ # TODO: cambiar Radius0
     Radius0<-550#680
   }
   else if(J.pos==2){
@@ -676,7 +676,7 @@ Max.Radius <- function(J.pos, l, genelist, IRlist){
     t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
     # if it doesn't find any gene, it tries with a bigger radius
     while(nrow(t)==0){
-      Radius<- Radius+(0.2)*Radius#0.2
+      Radius<- 1.2*Radius
       t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
     }
     R[track]<-Radius
@@ -969,7 +969,7 @@ JG.plotterDinp<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRListDinp[[track]][5])-J)*bw+pc
   }
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){
+    if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       for (j in seq(0.10, 0.70, 0.05)){
@@ -1156,7 +1156,7 @@ GN.plotterDinp<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRListDinp[[track]][5])-J)*bw+pc
   }
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){
+    if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       if (min(x1, x2) >= 104){
@@ -1255,7 +1255,7 @@ OJ.plotterDinp<- function(Radius, J.pos, track, jlens){#GeneName plotter
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRListDinp[[track]][5])-J)*bw+pc
   }
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){
+    if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       if (Rcord[i,1] > J & Rcord[i,2] <J ){
@@ -1349,7 +1349,7 @@ JD.plotterDinp<- function(Radius, J.pos, track, jlens){
   }
   counter<- 0
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){
+    if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       if (Rcord[i,1] > J & Rcord[i,2] <J ){
