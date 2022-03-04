@@ -131,9 +131,12 @@ toGeneList <- function(gene_table){
   m[,1] <- as.character(m[,1])
   m[,2] <- as.integer(m[,2])
   m[,3] <- as.integer(m[,3])
+  #m[,4] <- mapvalues(m[,4], from = c('+', '-'), to = c(1,0))
   
-  # We add two empty columns for convenience
+  # We add one empty columns for convenience with the previous format ()
   m <- cbind(m, replicate(2, numeric(NROW(m))))
+  # and the information about the strand
+  m <- cbind(m, gene_table[[3]])
   
   return(m)
 }

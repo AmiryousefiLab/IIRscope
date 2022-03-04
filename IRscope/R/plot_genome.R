@@ -100,6 +100,9 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
       tup[i,]<-t[i, c(1,2,3)]
     }
   }
+  # if(nrow(tup) > 1){
+  #   tup <- tup[order(as.numeric(tup[,2]),decreasing=FALSE),] # TODO
+  # }
   bw<- 10/Radius
   Rcord<- matrix(0, n, 2)
   Rcord[,1]<-as.numeric(tup[,2])
@@ -131,6 +134,7 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
+    #if(i%%2){
     if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
@@ -339,7 +343,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
   t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
   t[is.na(t)]<- "0"
   n<- length(t[,1])
-  tup<- matrix(0, n, 3)
+  tup <- matrix(0, n, 3)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
     if (which(dist==min(dist))>3){
@@ -349,6 +353,9 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
       tup[i,]<-t[i, c(1,2,3)]
     }
   }
+  # if(nrow(tup) > 1){
+  #   tup <- tup[order(as.numeric(tup[,2]),decreasing=FALSE),] # TODO
+  # }
   bw<- 10/Radius
   Rcord<- matrix(0, n, 2)
   Rcord[,1]<-as.numeric(tup[,2])
@@ -358,6 +365,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
+    #if(i%%2){
     if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
@@ -447,6 +455,9 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
       tup[i,] <- t[i, c(1,2,3)]
     }
   }
+  # if(nrow(tup) > 1){
+  #   tup <- tup[order(as.numeric(tup[,2]),decreasing=FALSE),] # TODO
+  # }
   bw <- 10/Radius
   Rcord<- matrix(0, n, 2)
   Rcord[,1] <- as.numeric(tup[,2])
@@ -456,6 +467,7 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
     Pcord[Pcord < 0] <- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
+    #if(i%%2){
     if(Rcord[i,1] > Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
@@ -537,6 +549,10 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       tup[i,]<-t[i, c(1,2,3)]
     }
   }
+  # if(nrow(tup) > 1){
+  #   tup <- tup[order(as.numeric(tup[,2]),decreasing=FALSE),] # TODO
+  # }
+  
   bw<- 10/Radius
   Rcord<- matrix(0, n, 2)
   Rcord[,1]<-as.numeric(tup[,2])
@@ -549,6 +565,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   }
   counter<- 0
   for (i in 1:n){
+    #if(i%%2){
     if(Rcord[i,1]>Rcord[i,2]){ # TODO
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
