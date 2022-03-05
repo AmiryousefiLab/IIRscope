@@ -90,19 +90,16 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
   t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
   t[is.na(t)]<- "0"
   n<- length(t[,1])
-  tup<- matrix(0, n, 3)
+  tup <- matrix(0, n, 4)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
     if (which(dist==min(dist))>3){
-      tup[i,]<-t[i, c(1,4,5)]
+      tup[i,]<-t[i, c(1,4,5,6)]
     }
     else {
-      tup[i,]<-t[i, c(1,2,3)]
+      tup[i,]<-t[i, c(1,2,3,6)]
     }
   }
-  # if(nrow(tup) > 1){
-  #   tup <- tup[order(as.numeric(tup[,2]),decreasing=FALSE),] # TODO
-  # }
   bw<- 10/Radius
   Rcord<- matrix(0, n, 2)
   Rcord[,1]<-as.numeric(tup[,2])
@@ -134,18 +131,16 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
-    #if(i%%2){
-    if(Rcord[i,1]>Rcord[i,2]){ # TODO
-      x1<-min(Pcord[i,1], pc+10)
-      x2<-max(Pcord[i,2], pc-10)
+    x1 <- max(Pcord[i,1], pc-10)
+    x2 <- min(Pcord[i,2], pc+10)
+    if(tup[i,4] == '+'){
       for (j in seq(0.10, 0.70, 0.05)){
         segments(x1, track*5+j+5, x2, track*5+j+5, lwd=1, col=paste(gcol(tup)[i]))
       }
     }
     else {
       for (j in seq(1.1, 1.7, 0.05)){
-        segments(max(Pcord[i,1], pc-10), track*5-j+5, min(Pcord[i,2], pc+10), 
-                 track*5-j+5, lwd=1, col=paste(gcol(tup)[i]))
+        segments(x1, track*5-j+5, x2, track*5-j+5, lwd=1, col=paste(gcol(tup)[i]))
       }
     }
   }
@@ -343,19 +338,16 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
   t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
   t[is.na(t)]<- "0"
   n<- length(t[,1])
-  tup <- matrix(0, n, 3)
+  tup <- matrix(0, n, 4)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
     if (which(dist==min(dist))>3){
-      tup[i,]<-t[i, c(1,4,5)]
+      tup[i,]<-t[i, c(1,4,5,6)]
     }
     else {
-      tup[i,]<-t[i, c(1,2,3)]
+      tup[i,]<-t[i, c(1,2,3,6)]
     }
   }
-  # if(nrow(tup) > 1){
-  #   tup <- tup[order(as.numeric(tup[,2]),decreasing=FALSE),] # TODO
-  # }
   bw<- 10/Radius
   Rcord<- matrix(0, n, 2)
   Rcord[,1]<-as.numeric(tup[,2])
@@ -365,17 +357,16 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
-    #if(i%%2){
-    if(Rcord[i,1]>Rcord[i,2]){ # TODO
-      x1<-min(Pcord[i,1], pc+10)
-      x2<-max(Pcord[i,2], pc-10)
+    x1 <- max(Pcord[i,1], pc-10)
+    x2 <- min(Pcord[i,2], pc+10)
+    if(tup[i,4] == '+'){
       if (min(x1, x2) >= 104){
         text(103.5, track*5+1.05+5, tup[i,1], cex=txtcex, col=txtout.color, font=txtfont)
       }
       else if (abs(x1-x2) >= 9.7){
         text(min(x1, x2)+1.8, track*5+0.35+5, tup[i,1], cex=txtcex, col=txtin.color, 
              font=txtfont)
-        text(max(x1, x2)+1, track*5+0.3+5, paste(Rcord[i,1]-Rcord[i,2], "bp"), 
+        text(max(x1, x2)+1, track*5+0.3+5, paste(Rcord[i,2]-Rcord[i,1], "bp"), 
              cex=numcex, col=txtin.color, font=numfont, pos=2)
       }
       else if (abs(x1-x2) >= 3 & abs(x1-x2) < 9.7){
@@ -388,8 +379,6 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
       }
     }
     else {
-      x1<-max(Pcord[i,1], pc-10)
-      x2<-min(Pcord[i,2], pc+10)
       if (abs(x1-x2) >= 9.7){
         text(min(x1, x2)+1.8, track*5-1.40+5, tup[i,1], cex=txtcex, 
              col=txtin.color, font=txtfont)
@@ -445,19 +434,16 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
   t <- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
   t[is.na(t)] <- "0"
   n <- length(t[,1])
-  tup <- matrix(0, n, 3)
+  tup <- matrix(0, n, 4)
   for (i in 1:n){
-    dist <- abs(as.numeric(t[i,][2:5])-J)
+    dist<-abs(as.numeric(t[i,][2:5])-J)
     if (which(dist==min(dist))>3){
-      tup[i,] <- t[i, c(1,4,5)]
+      tup[i,]<-t[i, c(1,4,5,6)]
     }
     else {
-      tup[i,] <- t[i, c(1,2,3)]
+      tup[i,]<-t[i, c(1,2,3,6)]
     }
   }
-  # if(nrow(tup) > 1){
-  #   tup <- tup[order(as.numeric(tup[,2]),decreasing=FALSE),] # TODO
-  # }
   bw <- 10/Radius
   Rcord<- matrix(0, n, 2)
   Rcord[,1] <- as.numeric(tup[,2])
@@ -467,11 +453,10 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
     Pcord[Pcord < 0] <- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
-    #if(i%%2){
-    if(Rcord[i,1] > Rcord[i,2]){ # TODO
-      x1<-min(Pcord[i,1], pc+10)
-      x2<-max(Pcord[i,2], pc-10)
-      if (Rcord[i,1] > J & Rcord[i,2] <J ){
+    x1 <- max(Pcord[i,1], pc-10)
+    x2 <- min(Pcord[i,2], pc+10)
+    if (Rcord[i,2] > J & Rcord[i,1] <J){ # TODO?
+      if(tup[i,4] == '+'){
         Arrows(min(x1, x2), track*5+1.1+5, pc-0.15, track*5+1.1+5, 
                arr.type = "T", cex=0.5, arr.length = 0.12, lwd=0.5, arr.width = 0.4)
         Arrows(pc-0.15, track*5+1.1+5, min(x1, x2), track*5+1.1+5, 
@@ -480,14 +465,9 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
                arr.type = "T", cex=0.5, arr.length = 0.12, lwd=0.5, arr.width = 0.4)
         Arrows(max(x1, x2), track*5+1.1+5, pc+0.15, track*5+1.1+5, 
                arr.type = "T", cex=0.5, arr.length = 0.12, lwd=0.5, arr.width = 0.4)
-        text(pc-1.4, track*5+1.4+5, paste(Rcord[i, 1]-J+1, "bp"), cex=0.4, pos=4)#up-right
-        text(pc+1.4, track*5+1.4+5, paste(J-Rcord[i, 2], "bp"), cex=0.4, pos=2)#up-left
-      }
-    }
-    else {
-      x1<-max(Pcord[i,1], pc-10)
-      x2<-min(Pcord[i,2], pc+10)
-      if (Rcord[i,2] > J & Rcord[i,1] <J ){
+        text(pc-1.4, track*5+1.4+5, paste(Rcord[i, 2]-J, "bp"), cex=0.4, pos=4)#up-right
+        text(pc+1.4, track*5+1.4+5, paste(J-Rcord[i, 1], "bp"), cex=0.4, pos=2)#up-left
+      } else {
         Arrows(max(x1, x2), track*5-2.1+5, pc+0.15, track*5-2.1+5, 
                arr.type = "T", cex=0.5, arr.length = 0.12, lwd=0.5, arr.width = 0.4)
         Arrows(pc+0.15, track*5-2.1+5, max(x1, x2), track*5-2.1+5, 
@@ -539,20 +519,16 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
   t[is.na(t)]<- "0"
   n<- length(t[,1])
-  tup<- matrix(0, n, 3)
+  tup <- matrix(0, n, 4)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
     if (which(dist==min(dist))>3){
-      tup[i,]<-t[i, c(1,4,5)]
+      tup[i,]<-t[i, c(1,4,5,6)]
     }
     else {
-      tup[i,]<-t[i, c(1,2,3)]
+      tup[i,]<-t[i, c(1,2,3,6)]
     }
   }
-  # if(nrow(tup) > 1){
-  #   tup <- tup[order(as.numeric(tup[,2]),decreasing=FALSE),] # TODO
-  # }
-  
   bw<- 10/Radius
   Rcord<- matrix(0, n, 2)
   Rcord[,1]<-as.numeric(tup[,2])
@@ -565,30 +541,22 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   }
   counter<- 0
   for (i in 1:n){
-    #if(i%%2){
-    if(Rcord[i,1]>Rcord[i,2]){ # TODO
-      x1<-min(Pcord[i,1], pc+10)
-      x2<-max(Pcord[i,2], pc-10)
-      if (Rcord[i,1] > J & Rcord[i,2] <J ){
-        counter<- counter+1
-      }
-    }
-    else {
-      x1<-max(Pcord[i,1], pc-10)
-      x2<-min(Pcord[i,2], pc+10)
-      if (Rcord[i,2] > J & Rcord[i,1] <J ){
-        counter<- counter+1
-      }
+    if (Rcord[i,2] > J & Rcord[i,1] <J){
+      counter<- counter+1
     }
   }
+  # TODO
   if (counter==0){#find the closest gene to the junction site
     nearest<- which(abs(Pcord-pc)==min(abs(Pcord-pc)))
     col.cor<- floor((nearest-0.01)/n)+1
     row.cor<- nearest-n*floor((nearest-0.01)/n)###Now we have the row of the nearest gene
     #with this setting the position of the zero (genes tangant to the junction site) will not be plotted.
     #If interested either put "=" for the middle condition of the left or right binary operator or better develop zero only handling if function
-    if (Rcord[row.cor, 1] > Rcord[row.cor, 2] & pc-Pcord[row.cor, col.cor] < 0 & 
-        min(Pcord[row.cor, 1], pc+10) - max(Pcord[row.cor, 2], pc-10) > 3 ){#top,right, big
+    x1 <- max(Pcord[i,1], pc-10)
+    x2 <- min(Pcord[i,2], pc+10)
+    
+    if (tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & 
+        min(Pcord[row.cor, 1], pc+10) - max(Pcord[row.cor, 2], pc-10) > 3){#top,right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5+1.3+5), 
                   curve = -0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -986,17 +954,18 @@ JG.plotterDinp<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRListDinp[[track]][5])-J)*bw+pc
   }
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){ # TODO
-      x1<-min(Pcord[i,1], pc+10)
-      x2<-max(Pcord[i,2], pc-10)
+    x1 <- max(Pcord[i,1], pc-10)
+    x2 <- min(Pcord[i,2], pc+10)
+    if(Rcord[i,1]>Rcord[i,2]){
+      # x1<-min(Pcord[i,1], pc+10)
+      # x2<-max(Pcord[i,2], pc-10)
       for (j in seq(0.10, 0.70, 0.05)){
         segments(x1, track*5+j+5, x2, track*5+j+5, lwd=1, col=paste(gcol(tup)[i]))
       }
     }
     else {
       for (j in seq(1.1, 1.7, 0.05)){
-        segments(max(Pcord[i,1], pc-10), track*5-j+5, min(Pcord[i,2], pc+10), 
-                 track*5-j+5, lwd=1, col=paste(gcol(tup)[i]))
+        segments(x1, track*5-j+5, x2, track*5-j+5, lwd=1, col=paste(gcol(tup)[i]))
       }
     }
   }
