@@ -954,16 +954,16 @@ JG.plotterDinp<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRListDinp[[track]][5])-J)*bw+pc
   }
   for (i in 1:n){
-    x1 <- max(Pcord[i,1], pc-10)
-    x2 <- min(Pcord[i,2], pc+10)
     if(Rcord[i,1]>Rcord[i,2]){
-      # x1<-min(Pcord[i,1], pc+10)
-      # x2<-max(Pcord[i,2], pc-10)
+      x1<-min(Pcord[i,1], pc+10)
+      x2<-max(Pcord[i,2], pc-10)
       for (j in seq(0.10, 0.70, 0.05)){
         segments(x1, track*5+j+5, x2, track*5+j+5, lwd=1, col=paste(gcol(tup)[i]))
       }
     }
     else {
+      x1 <- max(Pcord[i,1], pc-10)
+      x2 <- min(Pcord[i,2], pc+10)
       for (j in seq(1.1, 1.7, 0.05)){
         segments(x1, track*5-j+5, x2, track*5-j+5, lwd=1, col=paste(gcol(tup)[i]))
       }
