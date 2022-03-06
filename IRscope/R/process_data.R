@@ -68,6 +68,7 @@ IRs<- function(gbfiles, Sfiles, progress){
       if (rev){
         GeneList[[i]]<<- SSCrev(GeneList[[i]], (IRList[[i]][1]+IRList[[i]][3]), IRList[[i]][2])
       }
+      GeneList[[i]] <<- toGeneListWithStrand(GeneList[[i]])
     }
 
     # gets data in the needed format to get more information 
@@ -120,8 +121,8 @@ toIRDinp <- function(IRinfo){
 #' Transform gene_table data.frame to a matrix with less info used in the old functions
 #'
 #' @param gene_table data.frame with the gene information. The columns used in this
-#'  function are 1 (start), 2 (end) and 4 (gene name).
-#' @return matrix with the following columns: gene_name, start, end, 0's and 0's 
+#'  function are 1 (start), 2 (end), 4 (gene name) and 6 (strand).
+#' @return matrix with the following columns: gene_name, start, end, 0's, 0's and strand.
 #' (these 0's columns are there for convenience with the old format).
 toGeneList <- function(gene_table){
   # We transform the dataframe into a matrix with only the data we are interested:
@@ -140,6 +141,47 @@ toGeneList <- function(gene_table){
   
   return(m)
 }
+
+# TODO: use gene_table everywhere instead of the old matrix. Adapt code to not 
+#       use these two 0's columns anymore in the matrix.
+
+#' Transform gene_table data.frame to a matrix with less info used in the old functions
+#'
+#' @param gm gene matrix with the gene information.
+#' @return matrix with the following columns: gene_name, start, end, 0's, 0's and strand.
+#' (these 0's columns are there for convenience with the old format).
+toGeneListWithStrand <- function(gm){
+  colnames(gm) <- c("gene", "start", "end", "start1", "end1")
+  df <- as.data.frame(gm)
+  
+  # We separate those columns where the 4th and 5th columns have values
+  seconds <- which(df$start1 != 0 | df$end1 !=0)
+  seconds_len <- length(seconds)
+  if(seconds_len > 0){
+    for(i in 1:seconds_len){
+      df[nrow(df) + 1,] <- c(df[seconds[i],"gene"], df[seconds[i],"start1"], df[seconds[i],"end1"], 0, 0)
+      df[seconds[i],'start1'] <- 0
+      df[seconds[i],'end1'] <- 0
+    }  
+  }
+  
+  # We order the values and add the strand column
+  df_len <- nrow(df)
+  df$strand <- rep(NA, df_len)
+  for(i in 1:df_len){ # if they are in order the strand is -
+    if(df[i,'start'] < df[i, 'end']){
+      df[i,'strand'] <- '-'
+    } else { # else we reverse the order, and the strand is +
+      aux <- df[i,'start']
+      df[i,'start'] <- df[i, 'end']
+      df[i, 'end'] <- aux
+      df[i,'strand'] <- '+'
+    }
+  }
+  
+  return(as.matrix(df))
+}
+
 
 
 #### This section contains the functions related to the dogma input ####
