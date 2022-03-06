@@ -861,18 +861,19 @@ server <- function(input, output, session) {
         }
         shinyalert("Warning!", paste0(text, '\nPlease, run it again without those samples.'), 
                    type = "warning")
-      } else {
-        I<-   Max.Radius(1, l, genelist = GeneList, irlist = IRList)
-        II<-  Max.Radius(2, l, genelist = GeneList, irlist = IRList)
-        III<- Max.Radius(3, l, genelist = GeneList, irlist = IRList)
-        IV<-  Max.Radius(4, l, genelist = GeneList, irlist = IRList)
-        
-        if (length(unique(I)) != 1 || length(unique(II)) != 1
-            || length(unique(III)) != 1 || length(unique(IV)) != 1){
-          shinyalert("Warning!", "The spacing around the junction is not in scale.
-                     Refer to the FAQ to see why.", type = "warning")
-        }
-      }
+      } 
+      # else {
+      #   I<-   Max.Radius(1, l, genelist = GeneList, irlist = IRList)
+      #   II<-  Max.Radius(2, l, genelist = GeneList, irlist = IRList)
+      #   III<- Max.Radius(3, l, genelist = GeneList, irlist = IRList)
+      #   IV<-  Max.Radius(4, l, genelist = GeneList, irlist = IRList)
+      #   
+      #   if (length(unique(I)) != 1 || length(unique(II)) != 1
+      #       || length(unique(III)) != 1 || length(unique(IV)) != 1){
+      #     shinyalert("Warning!", "The spacing around the junction is not in scale.
+      #                Refer to the FAQ to see why.", type = "warning")
+      #   }
+      # }
       
       return(dist)
     }

@@ -696,7 +696,7 @@ Max.Radius <- function(J.pos, l, genelist, irlist){
     R[track]<-Radius
   }
   # If the difference is not too big, choose the same radius for all
-  if(max(R)-min(R) < 1000){ # TODO: decide what difference is good.
+  if(max(R)-min(R) < 300){ # what difference is good?
     Radius <- round(max(R)+1)
     for(track in 1:l){
       R[track] <- Radius
