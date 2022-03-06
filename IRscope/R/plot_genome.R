@@ -484,7 +484,7 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
   for (i in 1:n){
     x1 <- max(Pcord[i,1], pc-10)
     x2 <- min(Pcord[i,2], pc+10)
-    if (Rcord[i,2] > J & Rcord[i,1] <J){ # TODO?
+    if (Rcord[i,2] > J & Rcord[i,1] <J){
       if(tup[i,4] == '+'){
         Arrows(min(x1, x2), track*5+1.1+5, pc-0.15, track*5+1.1+5, 
                arr.type = "T", cex=0.5, arr.length = 0.12, lwd=0.5, arr.width = 0.4)
@@ -574,52 +574,46 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       counter<- counter+1
     }
   }
-  # TODO
   if (counter==0){#find the closest gene to the junction site
     nearest<- which(abs(Pcord-pc)==min(abs(Pcord-pc)))
     col.cor<- floor((nearest-0.01)/n)+1
     row.cor<- nearest-n*floor((nearest-0.01)/n)###Now we have the row of the nearest gene
-    #with this setting the position of the zero (genes tangant to the junction site) will not be plotted.
+    #with this setting the position of the zero (genes tangent to the junction site) will not be plotted.
     #If interested either put "=" for the middle condition of the left or right binary operator or better develop zero only handling if function
-    x1 <- max(Pcord[i,1], pc-10)
-    x2 <- min(Pcord[i,2], pc+10)
+    x1 <- max(Pcord[row.cor,1], pc-10)
+    x2 <- min(Pcord[row.cor,2], pc+10)
     
-    if (tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & 
-        min(Pcord[row.cor, 1], pc+10) - max(Pcord[row.cor, 2], pc-10) > 3){#top,right, big
+    if (tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2 - x1 > 3){#top,right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5+1.3+5), 
                   curve = -0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
                   arr.length=0.08, arr.lwd=0.4, arr.pos=0.69, endhead=TRUE)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4, track*5+1.3+0.2+5, 
-           paste(Rcord[row.cor, 2]-J, "bp"), cex=0.4)#
+           paste(Rcord[row.cor, 1]-J, "bp"), cex=0.4)
     }
-    else if(Rcord[row.cor, 1] > Rcord[row.cor, 2] & pc-Pcord[row.cor, col.cor] < 0 
-            & min(Pcord[row.cor, 1], pc+10) - max(Pcord[row.cor, 2], pc-10) <= 3 ) {#top, right, small
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3 ) {#top, right, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5 , 
              pc+(Pcord[row.cor, col.cor]-pc)/2 -2 , track*5+1.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4.5 , track*5+1.3+0.2+5, 
-           paste(Rcord[row.cor, 2]-J, "bp"), cex=0.4)
+           paste(Rcord[row.cor, 1]-J, "bp"), cex=0.4)
     }
-    else if(Rcord[row.cor, 1] < Rcord[row.cor, 2] & pc-Pcord[row.cor, col.cor] < 0 
-            & abs(max(Pcord[row.cor, 1], pc-10) - min(Pcord[row.cor, 2], pc+10)) > 3) {#low, right, big
-      curvedarrow (from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 > 3) {#low, right, big
+      curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
                    to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5), 
                    curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
                    arr.length=0.08, arr.lwd=0.4, arr.pos=0.69, endhead=TRUE)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4, track*5-2.3-0.2+5, 
            paste(Rcord[row.cor, 1]-J, "bp"), cex=0.4)
     }
-    else if(Rcord[row.cor, 1] < Rcord[row.cor, 2] & pc-Pcord[row.cor, col.cor] < 0 
-            & abs(max(Pcord[row.cor, 1], pc-10) - min(Pcord[row.cor, 2], pc+10)) <= 3) {#low, right, small
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3) {#low, right, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 -3, track*5-2.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 -4.5 , track*5-2.3-0.2+5, 
            paste(Rcord[row.cor, 1]-J, "bp"), cex=0.4)
     }
-    else if(Rcord[row.cor, 1] < Rcord[row.cor, 2] & pc-Pcord[row.cor, col.cor] > 0 
-            & abs(max(Pcord[row.cor, 1], pc-10) - min(Pcord[row.cor, 2], pc+10)) > 3) {#low, left, big
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#low, left, big
       curvedarrow (from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
                    to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 - 3, track*5-2.3+5), 
                    curve = -0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -627,30 +621,27 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4, track*5-2.3-0.2+5, 
            paste(J-Rcord[row.cor, 2], "bp"), cex=0.4)
     }
-    else if(Rcord[row.cor, 1] < Rcord[row.cor, 2] & pc-Pcord[row.cor, col.cor] > 0 
-            & abs(max(Pcord[row.cor, 1], pc-10) - min(Pcord[row.cor, 2], pc+10)) <= 3) {#low, left, small
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#low, left, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4.5 , track*5-2.3-0.2+5, 
            paste(J-Rcord[row.cor, 2], "bp"), cex=0.4)
     }
-    else if(Rcord[row.cor, 1] > Rcord[row.cor, 2] & pc-Pcord[row.cor, col.cor] > 0 
-            & min(Pcord[row.cor, 1], pc+10) - max(Pcord[row.cor, 2], pc-10) > 3) {#top, left, big
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#top, left, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 - 3, track*5+1.3+5), 
                   curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
                   arr.length=0.08, arr.lwd=0.4, arr.pos=0.69, endhead=TRUE)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4.5 , track*5+1.3+0.2+5, 
-           paste(J-Rcord[row.cor, 1], "bp"), cex=0.4)
+           paste(J-Rcord[row.cor, 2], "bp"), cex=0.4)
     }
-    else if(Rcord[row.cor, 1] > Rcord[row.cor, 2] & pc-Pcord[row.cor, col.cor] > 0 
-            & min(Pcord[row.cor, 1], pc+10) - max(Pcord[row.cor, 2], pc-10) <= 3) {#top, left, small
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#top, left, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 + 2 , track*5+1.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4, track*5+1.3+0.2+5, 
-           paste(J-Rcord[row.cor, 1], "bp"), cex=0.4)
+           paste(J-Rcord[row.cor, 2], "bp"), cex=0.4)
     }
   }
 }
@@ -672,7 +663,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
 #' different if they are not similar species).
 #' @export
 Max.Radius <- function(J.pos, l, genelist, irlist){
-  if(J.pos==1){ # TODO: cambiar Radius0
+  if(J.pos==1){ # TODO: Radius0 which one?
     Radius0<-550#680
   }
   else if(J.pos==2){
@@ -1171,7 +1162,7 @@ GN.plotterDinp<- function(Radius, J.pos, track, jlens, theme){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRListDinp[[track]][5])-J)*bw+pc
   }
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){ # TODO
+    if(Rcord[i,1]>Rcord[i,2]){
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       if (min(x1, x2) >= 104){
@@ -1270,7 +1261,7 @@ OJ.plotterDinp<- function(Radius, J.pos, track, jlens){#GeneName plotter
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRListDinp[[track]][5])-J)*bw+pc
   }
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){ # TODO
+    if(Rcord[i,1]>Rcord[i,2]){
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       if (Rcord[i,1] > J & Rcord[i,2] <J ){
@@ -1364,7 +1355,7 @@ JD.plotterDinp<- function(Radius, J.pos, track, jlens){
   }
   counter<- 0
   for (i in 1:n){
-    if(Rcord[i,1]>Rcord[i,2]){ # TODO
+    if(Rcord[i,1]>Rcord[i,2]){
       x1<-min(Pcord[i,1], pc+10)
       x2<-max(Pcord[i,2], pc-10)
       if (Rcord[i,1] > J & Rcord[i,2] <J ){
