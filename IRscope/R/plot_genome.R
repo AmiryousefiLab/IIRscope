@@ -54,8 +54,6 @@ JunctRadiusGeneFinder<- function(gene.cordinates, IRinfo, J.pos, radius, silence
   # If there are genes with the same name, we join them if they are in line
   if(nrow(t) > 0){
     n_occur <- data.frame(table(t[,1]))
-    print(t)
-    print(n_occur)
     if(nrow(n_occur[n_occur$Freq > 1,]) > 0){
       df <- data.frame(t)
       df$start <- as.numeric(df$start)
@@ -698,7 +696,7 @@ Max.Radius <- function(J.pos, l, genelist, irlist){
     R[track]<-Radius
   }
   # If the difference is not too big, choose the same radius for all
-  if(max(R)-min(R) < 300){ # TODO: decide what difference is good.
+  if(max(R)-min(R) < 1000){ # TODO: decide what difference is good.
     Radius <- round(max(R)+1)
     for(track in 1:l){
       R[track] <- Radius
