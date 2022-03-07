@@ -168,8 +168,9 @@ toGeneListWithStrand <- function(gm){
   # We order the values and add the strand column
   df_len <- nrow(df)
   df$strand <- rep(NA, df_len)
-  for(i in 1:df_len){ # if they are in order the strand is -
-    if(df[i,'start'] < df[i, 'end']){
+  for(i in 1:df_len){ 
+    if(df[i,'gene'] == 'psbA') print(df[i,])
+    if(as.numeric(df[i,'start']) < as.numeric(df[i,'end'])){ # if they are in order the strand is -
       df[i,'strand'] <- '-'
     } else { # else we reverse the order, and the strand is +
       aux <- df[i,'start']
