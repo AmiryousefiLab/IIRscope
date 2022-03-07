@@ -56,26 +56,33 @@ JunctRadiusGeneFinder<- function(gene.cordinates, IRinfo, J.pos, radius, silence
     n_occur <- data.frame(table(t[,1]))
     if(nrow(n_occur[n_occur$Freq > 1,]) > 0){
       df <- data.frame(t)
+      # We takes those genes which are repeated
+      df <- df[df$gene %in% n_occur[n_occur$Freq > 1, 'Var1'], ]
       df$start <- as.numeric(df$start)
       df$end <- as.numeric(df$end)
       df <- df[order(df$gene, df$end, df$start), ]
       
+      # We calculate the differences between their end and the next start
       rows <- nrow(df)
       diffs <- rep(NA, rows)
       for(i in 1:rows){
-        diffs[[i]] <- df$end[(i)%%rows+1] - df$start[i]
+        if(df$gene[(i)%%rows+1] == df$gene[i]){
+          diffs[[(i)%%rows+1]] <- (df$start[(i)%%rows+1] - df$end[i])%%IRinfo[4]
+        }
       }
+      # We change the end value for the genes that are together
       df$interval <- diffs
       for(i in 1:nrow(df)){
-        if(df$interval[i]==0){
+        if(!is.na(df$interval[i]) && df$interval[i]<=1){
           if(i == 1 & df$gene[1] == df$gene[rows]){
-            df$end[3] <- df$end[1]
+            df$end[rows] <- df$end[1]
           } else if(df$gene[i] == df$gene[i-1]){
             df$end[i-1] <- df$end[i]
           }
         }
       }
-      df %<>% filter(!interval==0) %>% select(-interval)
+      # We filter the genes that we don't need anymore
+      df %<>% filter(!interval<=1) %>% select(-interval)
       t <- as.matrix(df)
     }
   }
