@@ -64,11 +64,10 @@ IRs<- function(gbfiles, Sfiles, progress){
       GeneList[[i]] <<- toGeneList(gene_table)
     } else {
       # If it's not a dataframe it has to use another function
-      GeneList[[i]] <<- toGeneListWithStrand(gene_table)
+      GeneList[[i]] <<- unique(toGeneListWithStrand(gene_table))
       if (rev){
         GeneList[[i]]<<- SSCrev(GeneList[[i]], (IRList[[i]][1]+IRList[[i]][3]), IRList[[i]][2])
       }
-      
     }
 
     # gets data in the needed format to get more information 
@@ -178,7 +177,6 @@ toGeneListWithStrand <- function(gm){
       df[i,'strand'] <- '+'
     }
   }
-  
   return(as.matrix(df))
 }
 

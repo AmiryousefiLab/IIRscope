@@ -260,18 +260,18 @@ geneTableParsed <- function(gb, genome){
     tmp <- tmp[, which(colnames(tmp) %in% cols)]
     info <- rbind.data.frame(info, tmp)
   }
-
-
+  
+  
   # gene
   info$gene[is.na(info$gene)] <- info$product[is.na(info$gene)]
   info$pseudo[is.na(info$pseudo)] <- FALSE
-
+  
   info$gene[grepl(".*([0-9\\.]+)S.*", info$gene)] <-
     rrnFixer(info$gene[grepl(".*([0-9\\.]+)S.*", info$gene)])
   info$gene[grepl("^trn.*", info$gene, ignore.case=TRUE)] <-
     trnFixer(info$gene[grepl("^trn.*", info$gene, ignore.case=TRUE)])
-
-
+  
+  
   gene_table <- info %>%
     dplyr::filter(type %in% c("gene", "tRNA", "rRNA")) %>%
     dplyr::select(start, end, strand, gene, pseudo) %>%
@@ -286,18 +286,18 @@ geneTableParsed <- function(gb, genome){
   #   }
   # }
   # gene_table <- select(gene_table, chr, start, end, gene)
-
+  
   # remove duplicated tRNA and rRNA
   gene_table <- gene_table[order(gene_table[, "start"], -gene_table[, "end"]), ]
   gene_table <- gene_table[!duplicated(gene_table[, c("start", "strand", "gene")]),]
   gene_table <- gene_table[!duplicated(gene_table[, c("end", "strand", "gene")]),]
-
+  
   # codon usage
   cds <- info[which(info$type == "CDS"),]
   cds_cu <- codonUsage(cds, genome)
   gene_table <- dplyr::left_join(gene_table, cds_cu, by = c("gene", "strand",
                                                             "start"))
-
+  
   # gc content per gene
   gene_table <- gc_count_gene(genome, gene_table)
   return(gene_table)
@@ -315,21 +315,21 @@ geneTableParsed <- function(gb, genome){
 #' 
 geneTableRead <- function(gb, genome){
   genes <- as.data.frame(genbankr::genes(gb))
-
+  
   genes$gene[is.na(genes$gene)] <- genes$gene_id[is.na(genes$gene)]
-
+  
   if (!"pseudo" %in% colnames(genes)){
     genes$pseudo <- rep(FALSE, nrow(genes))
   }
   features <- as.data.frame(genbankr::otherFeatures(gb))
-
+  
   features <- features %>%
     dplyr::mutate(pseudo = rep(FALSE, n())) %>%
     dplyr::filter(type %in% c("rRNA", "tRNA")) %>%
     dplyr::filter(!gene %in% genes$gene)
-
+  
   features$gene[is.na(features$gene)] <- features$product[is.na(features$gene)]
-
+  
   if (nrow(features) != 0){
     gene_table <- genes %>%
       select(start, end, gene, strand, pseudo) %>%
@@ -346,12 +346,12 @@ geneTableRead <- function(gb, genome){
       select(chr, start, end, gene, strand, pseudo) %>%
       unique()
   }
-
+  
   gene_table$gene[grepl(".*([0-9\\.]+)S.*", gene_table$gene)] <-
     rrnFixer(gene_table$gene[grepl(".*([0-9\\.]+)S.*", gene_table$gene)])
   gene_table$gene[grepl("^trn.*", gene_table$gene, ignore.case=TRUE)] <-
     trnFixer(gene_table$gene[grepl("^trn.*", gene_table$gene, ignore.case=TRUE)])
-
+  
   # codon usage
   cds <- as.data.frame(genbankr::cds(gb))
   cds_cu <- codonUsage(cds, genome)
@@ -361,7 +361,7 @@ geneTableRead <- function(gb, genome){
     gene_table <- dplyr::left_join(gene_table, cds_cu,
                                    by = c("gene", "strand", "start"))
   }
-
+  
   # gc content per gene
   gene_table <- gc_count_gene(genome, gene_table)
   return(gene_table)
@@ -469,7 +469,7 @@ trnFixer <- function(tRNA) {
                     c("A", "R", "N", "D", "C", "E", "Q", "G", "H",
                       "I", "L", "K", "M", "F", "P", "S", "T", "W",
                       "Y", "V"))
-
+  
   for (i in 1:ncol(aa_table)){
     tRNA <- sub(aa_table[1, i], aa_table[2, i], tRNA)
   }
@@ -522,7 +522,7 @@ codonUsage <- function(cds, genome){
         }
       }
     }
-
+    
     names(cds_seq_f) <- tmp$gene
     cds_cu_f <- coRdon::codonTable(cds_seq_f)
     cds_cu_f <- as.vector(coRdon::MILC(cds_cu_f))
@@ -531,8 +531,8 @@ codonUsage <- function(cds, genome){
                            strand = rep("+", nrow(tmp)),
                            stringsAsFactors = FALSE)
   }
-
-
+  
+  
   # Reverse strand
   cds_cu_r <- NULL
   cds_r <- cds[which(cds$strand == "-"),]
@@ -573,7 +573,7 @@ codonUsage <- function(cds, genome){
                            strand = rep("-", nrow(tmp)),
                            stringsAsFactors = FALSE)
   }
-
+  
   if (!is.null(cds_cu_f) & !is.null(cds_cu_r)){
     cds_cu <- rbind.data.frame(cds_cu_f, cds_cu_r)
     colnames(cds_cu) <- c("cu_bias", "gene", "start", "strand")
@@ -586,94 +586,62 @@ codonUsage <- function(cds, genome){
   } else {
     cds_cu <- NULL
   }
-
+  
   return(cds_cu)
 }
 
-#' Reverse SSC section in the plot. TODO: adapt to not use 4th and 5th column.
+#' Reverse SSC section in the plot.
 #'
-#' @param genecord gene coordinates for SSC region.
-#' @param SScs number: SSC ini
-#' @param SSCe number: SSC end
+#' @param g gene coordinates for SSC region.
+#' @param SSC_start number: SSC start
+#' @param SSC_end number: SSC end
 #'
-#' @return genecord edited to be reversed.
+#' @return g edited to be reversed.
 #' 
-SSCrev<- function(genecord, SSCs, SSCe){
-  g<- genecord
-  a<- SSCs # SSC ini
-  b<- SSCe # SSC end
+SSCrev<- function(g, SSC_start, SSC_end){
+  g<- as.data.frame(g)
   g[, 2]<- as.numeric(g[,2])
   g[, 3]<- as.numeric(g[,3])
-  g[, 4]<- as.numeric(g[,4])
-  g[, 5]<- as.numeric(g[,5])
   for (i in 1:length(g[,1])){
-    if(max(g[i, 2], g[i, 3]) <= b  && min(g[i, 2], g[i, 3]) >= a){
-      g[i, 2]<- paste(b-(as.numeric(g[i, 2])-a))
-      g[i, 3]<- b-(as.numeric(g[i, 3])-a)
+    new_start <- SSC_end - as.numeric(g[i, 'end']) + SSC_start
+    new_end <- SSC_end - as.numeric(g[i, 'start']) + SSC_start
+    
+    if(as.numeric(g[i,'start']) >= SSC_start && as.numeric(g[i,'end']) <= SSC_end){
+      g[i, 2]<- new_start
+      g[i, 3]<- new_end
+      if(g[i,'strand'] == '+'){
+        g[i, 'strand'] <- '-'
+      } else {
+        g[i,"strand"] <- '+'
+      }
     }
     
     #If the gene is starting from SSC then it should also be fixed
     
-    #on the positive strand
-    if(g[i, 2] < a & g[i, 3] > a){
-      g[i, 2]<- b+(a-as.numeric(g[i,2]))
-      g[i, 3]<- b-(as.numeric(g[i,3])-a)
-    }
-    #reverseve of that
-    else if(g[i, 2] > b & g[i, 3] < b){
-      g[i, 2]<- a-(as.numeric(g[i,2])-b)
-      g[i, 3]<- a+(b-as.numeric(g[i,3]))
-    }
-    
-    #on the negative strand
-    else if(g[i, 2] < b & g[i, 3] > b){
-      g[i, 2]<- a+(b-as.numeric(g[i,2]))
-      g[i, 3]<- a-(as.numeric(g[i,3])-b)
-    }
-    #reverseve of that
-    else if(g[i, 2] > a & g[i, 3] < a){
-      g[i, 2]<- b-(as.numeric(g[i,2])-a)
-      g[i, 3]<- b+(a-as.numeric(g[i,3]))
-    }
-    
-    
-    ### for the 4th and 5th columns
-    # if(g[i,4] != 0 && g[i,5] != 0){
-    #   
-    # }
-    #if the two values of the second and third column are in the SSC, then reverse them
-    if(max(g[i, 4], g[i, 5]) <= b  && min(g[i, 4], g[i, 5]) >= a){
-      g[i, 4]<- paste(b-(as.numeric(g[i, 4])-a))
-      g[i, 5]<- b-(as.numeric(g[i, 5])-a)
-    }
-    
-    #If the gene is starting from SSC then it should also be fixed
-    
-    #on the positive strand
-    if(g[i, 4] < a & g[i, 5] > a){
-      g[i, 4]<- b+(a-as.numeric(g[i,4]))
-      g[i, 5]<- b-(as.numeric(g[i,5])-a)
-    }
-    #reverseve of that
-    else if(g[i, 4] > b & g[i, 5] < b){
-      g[i, 4]<- a-(as.numeric(g[i,4])-b)
-      g[i, 5]<- a+(b-as.numeric(g[i,5]))
-    }
-    
-    #on the negative strand
-    else if(g[i, 4] < b & g[i, 5] > b){
-      g[i, 4]<- a+(b-as.numeric(g[i,4]))
-      g[i, 4]<- a-(as.numeric(g[i,5])-b)
-    }
-    #reverseve of that
-    else if(g[i, 4] > a & g[i, 5] < a){
-      g[i, 4]<- b-(as.numeric(g[i,4])-a)
-      g[i, 5]<- b+(a-as.numeric(g[i,5]))
+    if(as.numeric(g[i,'start']) < SSC_start && as.numeric(g[i,'end']) > SSC_start){
+      # We save the part outside SSC
+      g <- rbind(g, c(g[i,"gene"], g[i,'start'], SSC_start, 0, 0, g[i,'strand']))
+
+      g[i, 2]<- new_start
+      g[i, 3]<- SSC_end
+      if(g[i,'strand'] == '+'){
+        g[i, 'strand'] <- '-'
+      } else {
+        g[i,"strand"] <- '+'
+      }
+    } else if(as.numeric(g[i,'start']) < SSC_end && as.numeric(g[i,'end']) > SSC_end){
+      # We save the part outside SSC
+      g <- rbind(g, c(g[i,"gene"], SSC_end, g[i,'end'], 0, 0, g[i,'strand']))
+
+      g[i, 2]<- SSC_start
+      g[i, 3]<- new_end
+      if(g[i,'strand'] == '+'){
+        g[i, 'strand'] <- '-'
+      } else {
+        g[i,"strand"] <- '+'
+      }
     }
   }
-  g[, 2]<- as.character(g[,2])
-  g[, 3]<- as.character(g[,3])
-  g[, 4]<- as.character(g[,4])
-  g[, 5]<- as.character(g[,5])
+  g <- as.matrix(g)
   return(g)
 }
