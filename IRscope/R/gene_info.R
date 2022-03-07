@@ -590,7 +590,7 @@ codonUsage <- function(cds, genome){
   return(cds_cu)
 }
 
-#' Reverse SSC section in the plot
+#' Reverse SSC section in the plot. TODO: adapt to not use 4th and 5th column.
 #'
 #' @param genecord gene coordinates for SSC region.
 #' @param SScs number: SSC ini

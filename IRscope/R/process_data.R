@@ -64,11 +64,11 @@ IRs<- function(gbfiles, Sfiles, progress){
       GeneList[[i]] <<- toGeneList(gene_table)
     } else {
       # If it's not a dataframe it has to use another function
-      GeneList[[i]] <<- gene_table
+      GeneList[[i]] <<- toGeneListWithStrand(gene_table)
       if (rev){
         GeneList[[i]]<<- SSCrev(GeneList[[i]], (IRList[[i]][1]+IRList[[i]][3]), IRList[[i]][2])
       }
-      GeneList[[i]] <<- toGeneListWithStrand(GeneList[[i]])
+      
     }
 
     # gets data in the needed format to get more information 
@@ -168,8 +168,7 @@ toGeneListWithStrand <- function(gm){
   # We order the values and add the strand column
   df_len <- nrow(df)
   df$strand <- rep(NA, df_len)
-  for(i in 1:df_len){ 
-    if(df[i,'gene'] == 'psbA') print(df[i,])
+  for(i in 1:df_len){
     if(as.numeric(df[i,'start']) < as.numeric(df[i,'end'])){ # if they are in order the strand is -
       df[i,'strand'] <- '-'
     } else { # else we reverse the order, and the strand is +
