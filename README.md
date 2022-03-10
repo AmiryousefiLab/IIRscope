@@ -1,4 +1,4 @@
-# [IIRscope](https://irscope.shinyapps.io/irscope-main/) - Intelligent Inverted Repeat scoping tool
+# [IRscope+](https://irscope.shinyapps.io/irscope-main/) - Updated Inverted Repeat scoping tool
 
 ![Website](https://img.shields.io/website?url=https%3A%2F%2Firscope.shinyapps.io%2Firscope-main%2F)
 
