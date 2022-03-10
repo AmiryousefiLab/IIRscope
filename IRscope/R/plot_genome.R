@@ -169,7 +169,7 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
   for (i in 1:n){
     x1 <- max(Pcord[i,1], pc-10)
     x2 <- min(Pcord[i,2], pc+10)
-    if(tup[i,4] == '+'){
+    if(tup[i,4] == '-'){
       for (j in seq(0.10, 0.70, 0.05)){
         segments(x1, track*5+j+5, x2, track*5+j+5, lwd=1, col=paste(gcol(tup)[i]))
       }
@@ -395,7 +395,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
   for (i in 1:n){
     x1 <- max(Pcord[i,1], pc-10)
     x2 <- min(Pcord[i,2], pc+10)
-    if(tup[i,4] == '+'){
+    if(tup[i,4] == '-'){
       if (min(x1, x2) >= 104){
         text(103.5, track*5+1.05+5, tup[i,1], cex=txtcex, col=txtout.color, font=txtfont)
       }
@@ -492,7 +492,7 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
     x1 <- max(Pcord[i,1], pc-10)
     x2 <- min(Pcord[i,2], pc+10)
     if (Rcord[i,2] > J & Rcord[i,1] <J){
-      if(tup[i,4] == '+'){
+      if(tup[i,4] == '-'){
         Arrows(min(x1, x2), track*5+1.1+5, pc-0.15, track*5+1.1+5, 
                arr.type = "T", cex=0.5, arr.length = 0.12, lwd=0.5, arr.width = 0.4)
         Arrows(pc-0.15, track*5+1.1+5, min(x1, x2), track*5+1.1+5, 
@@ -590,7 +590,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
     x1 <- max(Pcord[row.cor,1], pc-10)
     x2 <- min(Pcord[row.cor,2], pc+10)
     
-    if (tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2 - x1 > 3){#top,right, big
+    if (tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2 - x1 > 3){#top,right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5+1.3+5), 
                   curve = -0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -598,14 +598,14 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4, track*5+1.3+0.2+5, 
            paste(Rcord[row.cor, 1]-J, "bp"), cex=0.4)
     }
-    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3 ) {#top, right, small
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3 ) {#top, right, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5 , 
              pc+(Pcord[row.cor, col.cor]-pc)/2 -2 , track*5+1.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4.5 , track*5+1.3+0.2+5, 
            paste(Rcord[row.cor, 1]-J, "bp"), cex=0.4)
     }
-    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 > 3) {#low, right, big
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 > 3) {#low, right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
                    to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5), 
                    curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -613,14 +613,14 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4, track*5-2.3-0.2+5, 
            paste(Rcord[row.cor, 1]-J, "bp"), cex=0.4)
     }
-    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3) {#low, right, small
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3) {#low, right, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 -3, track*5-2.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 -4.5 , track*5-2.3-0.2+5, 
            paste(Rcord[row.cor, 1]-J, "bp"), cex=0.4)
     }
-    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#low, left, big
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#low, left, big
       curvedarrow (from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
                    to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 - 3, track*5-2.3+5), 
                    curve = -0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -628,14 +628,14 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4, track*5-2.3-0.2+5, 
            paste(J-Rcord[row.cor, 2], "bp"), cex=0.4)
     }
-    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#low, left, small
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#low, left, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4.5 , track*5-2.3-0.2+5, 
            paste(J-Rcord[row.cor, 2], "bp"), cex=0.4)
     }
-    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#top, left, big
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#top, left, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 - 3, track*5+1.3+5), 
                   curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -643,7 +643,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4.5 , track*5+1.3+0.2+5, 
            paste(J-Rcord[row.cor, 2], "bp"), cex=0.4)
     }
-    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#top, left, small
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#top, left, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 + 2 , track*5+1.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
