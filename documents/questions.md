@@ -1,1 +1,1 @@
-Here you can find a **Frequent Asked Questions (FAQ)** section and a **Q&A** section from the [IIRscope Github](https://github.com/AmiryousefiLab/IIRscope). To add a new issue you can access the Github issues page [here](https://github.com/AmiryousefiLab/IIRscope/issues).
+Here you can find a **Frequent Asked Questions (FAQ)** section and a **Q&A** section from the [IRscope+ Github](https://github.com/AmiryousefiLab/IIRscope). To add a new issue you can access the Github issues page [here](https://github.com/AmiryousefiLab/IIRscope/issues).

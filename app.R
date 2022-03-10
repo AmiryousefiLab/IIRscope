@@ -67,17 +67,17 @@ ui <- fluidPage(
        h1 {color:#267A43;}
        h4 {color:black;}
        h3 {color:navy;}
-       p {color:navy;}
+       p {color:velvet;}
        </style>
        </head>
        <body>
        
-       <div style="opacity:0.1;position:absolute;right:16px;left:16px;height:178px;border-radius:300px;background-color:#40B3DF"></div>
-       <div style="padding:20px;border-radius:300px;border:20px solid #1E8449";">
+       <div style="opacity:0.1;position:absolute;right:16px;left:16px;height:178px;border-radius:300px;background-color:#D1382A"></div>
+       <div style="padding:20px;border-radius:300px;border:20px solid #2A6332;">
        <div style="opacity:0.3;position:absolute;background-color:#8E44AD"></div>
        
-       <h1 style="font-family:Copperplate Gothic Bold;letter-spacing:8px;text-align:center;">IIRSCOPE</h1>
-       <h4 style = "font-family:Charlesworth;text-align:center;color:navy;"><em> Tool for visualizing the junction sites of the chloroplast genome </em> </h4>
+       <h1 style="font-family:Copperplate Gothic Bold;letter-spacing:8px;text-align:center;">IRSCOPE+</h1>
+       <h4 style = "font-family:Charlesworth;text-align:center;color:velvet;"><em> Updated tool for visualizing the junction sites of the chloroplast genome </em> </h4>
 
        </div>
        </body>
@@ -463,7 +463,7 @@ ui <- fluidPage(
                                               )
                                        ))
                             ),
-                   tabPanel('Questions?', br(), 
+                   tabPanel('Help', br(), 
                             tags$div(includeMarkdown("./documents/questions.md"), style = "max-width:800px;"),
                             br(),
                             tabsetPanel(
