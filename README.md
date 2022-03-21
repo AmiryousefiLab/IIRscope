@@ -1,7 +1,5 @@
 # [IRscope+](https://irscope.shinyapps.io/IRplus/) - Updated Inverted Repeat scoping tool
 
-![Website](https://img.shields.io/website?url=https%3A%2F%2Firscope.shinyapps.io%2Firplus%2F)
-
 Link to the [web application](https://irscope.shinyapps.io/IRplus/).
 
 ## Table of Contents
@@ -50,5 +48,4 @@ Publication at Bioinformatics <https://academic.oup.com/bioinformatics/article/3
 
 * [Chloroplot](https://github.com/shuyuzheng/Chloroplot/): visualizing organelle genomes.
 * University of Helsinki.
-* [Img Shields](https://shields.io): web working symbol.
 * [Freepik icons](https://www.flaticon.com/authors/freepik): SVG icons in *Coloring* section from [Flaticon](https://www.flaticon.com/).
