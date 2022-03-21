@@ -1,8 +1,8 @@
-# [IRscope+](https://irscope.shinyapps.io/irscope-main/) - Updated Inverted Repeat scoping tool
+# [IRscope+](https://irscope.shinyapps.io/IRplus/) - Updated Inverted Repeat scoping tool
 
-![Website](https://img.shields.io/website?url=https%3A%2F%2Firscope.shinyapps.io%2Firscope-main%2F)
+![Website](https://img.shields.io/website?url=https%3A%2F%2Firscope.shinyapps.io%2Firplus%2F)
 
-Link to the [web application](https://irscope.shinyapps.io/irscope-main/).
+Link to the [web application](https://irscope.shinyapps.io/IRplus/).
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ Link to the [web application](https://irscope.shinyapps.io/irscope-main/).
 
 IIRscope is a tool for visualizing the genes and indel mismatches on the boundaries of the junction sites of the chloroplast genome. 
 
-You can either use the web application at [https://irscope.shinyapps.io/irscope-main/]() or download the code from the repository and run it locally. In the latter case you will need to use [R](https://www.r-project.org/) and [RStudio](https://www.rstudio.com/). You need to open the file [`app.R`](https://github.com/AmiryousefiLab/IIRscope/blob/main/app.R) and press *Run App*. A GUI equal to the one at the web will appear and you can test everything manually.
+You can either use the web application at [https://irscope.shinyapps.io/IRplus/]() or download the code from the repository and run it locally. In the latter case you will need to use [R](https://www.r-project.org/) and [RStudio](https://www.rstudio.com/). You need to open the file [`app.R`](https://github.com/AmiryousefiLab/IIRscope/blob/main/app.R) and press *Run App*. A GUI equal to the one at the web will appear and you can test everything manually.
 
 ### How the project is divided
 
@@ -35,7 +35,7 @@ There are two main parts:
 
 ## Questions
 
-You can access the *FAQ* section from the *Questions?* section in the [web app](https://irscope.shinyapps.io/irscope-main/). If you don't find what you're looking for there, you can post an issue [here](https://github.com/AmiryousefiLab/IIRscope/issues).
+You can access the *FAQ* section from the *Questions?* section in the [web app](https://irscope.shinyapps.io/IRplus/). If you don't find what you're looking for there, you can post an issue [here](https://github.com/AmiryousefiLab/IIRscope/issues).
 
 ## Reference 
 
