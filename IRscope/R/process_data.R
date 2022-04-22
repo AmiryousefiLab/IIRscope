@@ -48,6 +48,7 @@ IRs<- function(gbfiles, Sfiles, progress){
     #   TODO: join reverse regions functions to work as one.
     rev <- Sfiles[[i]]
     gene_table <- data$gene_table
+    gene_table$start <- (gene_table$start - 1) %% genome_length # Needed to inclue start inside the gene.
     
     if(is.data.frame(data$gene_table)){
       if (rev){

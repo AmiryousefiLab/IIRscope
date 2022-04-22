@@ -539,7 +539,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   }
   else if(J.pos==2){
     pc<-jlens$jsb.len
-    J<- IRList[[track]][1]+IRList[[track]][3]
+    J<- (IRList[[track]][1]+IRList[[track]][3]) %% IRList[[track]][4]
   }
   else if(J.pos==3){
     pc<-jlens$jsa.len
@@ -547,7 +547,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   }
   else if(J.pos==4){
     pc<-jlens$jla.len
-    J<- IRList[[track]][2]+IRList[[track]][3]
+    J<- (IRList[[track]][2]+IRList[[track]][3]) %% IRList[[track]][4] # TODO: fix this everywhere else
   } else {
     stop("J.pos missing or out bound. It should be either 1,2,3, 
              or 4 for JLB, JSB, JSA, and JLA, recpectively ")
