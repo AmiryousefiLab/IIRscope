@@ -31,8 +31,14 @@ get_data_from_gb <- function(gbfile, local.file = FALSE){
       my_env$gene_table <- geneTableRead(my_env$gb, my_env$genome)
     }, error = function(e){
       tryCatch({
+        # TODO: parseGenBank doesn't detect ORIGIN without trailing spaces, 
+        #       this is a temporary solution
+        tx = readLines(gbfile)
+        tx = gsub(pattern = "ORIGIN", replace = "ORIGIN ", x = tx)
+        writeLines(tx, con=gbfile)
+        
         my_env$gb <- genbankr::parseGenBank(gbfile)
-        my_env$genome <- my_env$gb$ORIGIN[[1]]
+        my_env$genome <- my_env$gb$ORIGIN[[1]] 
         my_env$l <- Biostrings::nchar(my_env$genome)
         my_env$gene_table <- geneTableParsed(my_env$gb, my_env$genome)
       }, error = function(e){
