@@ -286,7 +286,7 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
            pch=6, col=theme$midmis.color)
     text(half_ir_plotdist+pc, track*5+4.5, txt, cex=0.25, font=4)
     segments(half_ir_plotdist+pc, track*5+7, half_ir_plotdist+pc,
-             track*5+5.2, lty='dashed', lwd=1, col = theme$misline.color)
+             track*5+5.1, lty='dashed', lwd=0.5, col = theme$misline.color)
   } else if(J.pos == 1 | J.pos == 3) {
     text(half_ir_plotdist+pc, track*5+4.5, "//", cex=0.95, font=1)
   }
@@ -303,27 +303,27 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
         inside[[i]]$Pcord <- pc - (inside[[i]]$dista*half_ir_plotdist/Radius)
       }
       if(inside[[i]]$mismatch_type == 'replace'){
-        inside[[i]]$pch <- 16
+        inside[[i]]$pch <- 21
         inside[[i]]$col <- theme$replace.color
       } else if(inside[[i]]$mismatch_type == 'delete') {
-        inside[[i]]$pch <- 17
+        inside[[i]]$pch <- 24
         inside[[i]]$col <- theme$delete.color
       } else if(inside[[i]]$mismatch_type == 'insert') {
-        inside[[i]]$pch <- 18
+        inside[[i]]$pch <- 23
         inside[[i]]$col <- theme$insert.color
       } else {
-        inside[[i]]$pch <- 19
+        inside[[i]]$pch <- 21
       }
     }
     
     for (i in 1:n){
       points(max(inside[[i]]$Pcord, pc-10), track*5+2.3+5, cex=0.7, 
-             pch=inside[[i]]$pch, col=inside[[i]]$col)
+             pch=inside[[i]]$pch, bg=inside[[i]]$col, lwd=0.5)
       # text(max(inside[[i]]$Pcord, pc-10), track*5+1.6+5, 
       #      paste(inside[[i]]$position, inside[[i]]$string), 
       #      cex=0.4, col='black', pos=3)
       segments(max(inside[[i]]$Pcord, pc-10), track*5+7, max(inside[[i]]$Pcord, pc-10), 
-               track*5+5.2, lty='dashed', lwd=1, col = theme$misline.color)
+               track*5+5.2, lty='dashed', lwd=0.5, col = theme$misline.color)
     }
   }
 }
