@@ -80,6 +80,10 @@ get_data_from_gb <- function(gbfile, local.file = FALSE){
 #' @return The genome of the sequence that is deposited at the end of the GeneBank file in DNAString object format
 get_genome <- function(gb){
   fasta <- gb[(grep("ORIGIN", gb)+1):length(gb)]
+  ans <- readOrigin(fasta)
+  if(!is.null(ans)){
+    return(ans)
+  }
   while(fasta[length(fasta)]=="") {
     fasta <- fasta[1:length(fasta)-1]
   }
@@ -132,6 +136,22 @@ FasExtract<- function(gb){
   #fasta[length(fasta)]<- gsub("NA", "", fasta[length(fasta)])
   fas<-gsub("NA", "", fas)
   strsplit(fas, "")[[1]]
+}
+
+# Function from genbankr package
+readOrigin = function(lines, seqtype = "bp") {
+  ## strip spacing and line numbering
+  regex = "([[:space:]]+|[[:digit:]]+|//)"
+  
+  dnachar = gsub(regex, "", lines[-1])
+  chars = paste(dnachar, collapse="")
+  if(any(nzchar(dnachar))) {
+    switch(seqtype,
+           bp = DNAString(chars),
+           aa = AAString(chars),
+           stop("Unknown origin sequence type: ", seqtype))
+  } else
+    NULL
 }
 
 
