@@ -48,7 +48,6 @@ IRs<- function(gbfiles, Sfiles, progress){
     #   TODO: join reverse regions functions to work as one.
     rev <- Sfiles[[i]]
     gene_table <- data$gene_table
-    gene_table$start <- (gene_table$start - 1) %% genome_length # Needed to inclue start inside the gene.
     
     if(is.data.frame(data$gene_table)){
       if (rev){
@@ -62,6 +61,7 @@ IRs<- function(gbfiles, Sfiles, progress){
           IndelList[[i]] <<- data_rev$indel_table
         }
       }
+      gene_table$start <- (gene_table$start - 1) %% genome_length # Needed to inclue start inside the gene.
       GeneList[[i]] <<- toGeneList(gene_table)
     } else {
       # If it's not a dataframe it has to use another function
@@ -87,6 +87,7 @@ IRs<- function(gbfiles, Sfiles, progress){
     # getting genelist in dogma format
     GeneList[[i]]<<- trnfixer(GeneList[[i]])
     GeneList[[i]]<<- trnCut(GeneList[[i]])
+    
     
     # when one specie is analysed, progress bar grows
     progress$set(value = i, 

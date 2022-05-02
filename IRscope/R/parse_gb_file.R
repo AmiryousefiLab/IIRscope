@@ -238,15 +238,16 @@ rdnFixer<- function(gb){
 #' @return a character contains the specie's name.
 #' @export
 sp.name<- function(gb){
-  sp <- paste(strsplit(gb[2], " ")[[1]][3], strsplit(gb[2], " ")[[1]][4], sep=" ")
-  if(length(sp) < 2){
-    sp <- gb[(grep('ORGANISM', gb))]
-    sp <- sub('.*ORGANISM  ', '', sp)
-  }
+  sp <- gb[(grep('ORGANISM', gb))]
+  sp <- sub('.*ORGANISM  ', '', sp)
+
   if(length(sp) < 2){
     sp <- gb[(grep('DEFINITION', gb))]
     sp <- sub('.*DEFINITION  ', '', sp)
     sp <- sub(' (plastid|chloroplast).*', '', sp)
+  }
+  if(length(sp) < 2){
+    sp <- paste(strsplit(gb[2], " ")[[1]][3], strsplit(gb[2], " ")[[1]][4], sep=" ")
   }
   return(sp)
 }
