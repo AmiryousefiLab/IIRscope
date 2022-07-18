@@ -109,7 +109,11 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
   }
   else if(J.pos==2){
     pc<-jlens$jsb.len
-    J<- IRList[[track]][1]+IRList[[track]][3]
+    J <- IRList[[track]][1]+IRList[[track]][3]
+    #print(IRList[[track]][1]+IRList[[track]][3] %% IRList[[track]][4])
+    if(J > IRList[[track]][4]){
+      J <- J-IRList[[track]][4]
+    }
   }
   else if(J.pos==3){
     pc<-jlens$jsa.len
@@ -354,6 +358,9 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
   else if(J.pos==2){
     pc<-jlens$jsb.len
     J<- IRList[[track]][1]+IRList[[track]][3]
+    if(J > IRList[[track]][4]){
+      J <- J-IRList[[track]][4]
+    }
   }
   else if(J.pos==3){
     pc<-jlens$jsa.len
@@ -454,6 +461,9 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
   else if(J.pos==2){
     pc<-jlens$jsb.len
     J<- IRList[[track]][1]+IRList[[track]][3]
+    if(J > IRList[[track]][4]){
+      J <- J-IRList[[track]][4]
+    }
   }
   else if(J.pos==3){
     pc<-jlens$jsa.len
@@ -539,7 +549,10 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   }
   else if(J.pos==2){
     pc<-jlens$jsb.len
-    J<- (IRList[[track]][1]+IRList[[track]][3]) %% IRList[[track]][4]
+    J<- (IRList[[track]][1]+IRList[[track]][3]) #%% IRList[[track]][4]
+    if(J > IRList[[track]][4]){
+      J <- J-IRList[[track]][4]
+    }
   }
   else if(J.pos==3){
     pc<-jlens$jsa.len
@@ -558,7 +571,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   tup <- matrix(0, n, 4)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
-    if (which(dist==min(dist))>3){
+    if (which(dist==min(dist))[1]>3){
       tup[i,]<-t[i, c(1,4,5,6)]
     }
     else {
@@ -674,7 +687,7 @@ Max.Radius <- function(J.pos, l, genelist, irlist){
     Radius0<-550#680
   }
   else if(J.pos==2){
-    Radius0<-100
+    Radius0<-180
   }
   else if(J.pos==3){
     Radius0<-700#1800
@@ -730,11 +743,8 @@ chr.count<- function(word){
 #' @return number: place where LSC starts.
 LSC<- function(IRinfo){
   c<-as.vector(IRinfo)
-  IR<- c[3]
-  SSC<- c[2]-(c[1]+IR)
-  return(c[4]-(SSC+2*IR))
+  return(c[4]-(SSC(IRinfo)+2*c[3]))
 }
-
 
 #' SSC place
 #'
@@ -744,7 +754,11 @@ LSC<- function(IRinfo){
 #' @return number: place where SSC starts.
 SSC<- function(IRinfo){
   c<-as.vector(IRinfo)
-  return(c[2]-(c[1]+c[3]))
+  if(c[1]>c[2]){
+    return(c[1]-(c[2]+c[3]))
+  } else { 
+    return(c[2]-(c[1]+c[3]))
+  }
 }
 
 
