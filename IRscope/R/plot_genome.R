@@ -133,7 +133,7 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
   tup <- matrix(0, n, 4)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
-    if (which(dist==min(dist))>3){
+    if (which(dist==min(dist))[1]>3){
       tup[i,]<-t[i, c(1,4,5,6)]
     }
     else {
@@ -384,7 +384,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
   tup <- matrix(0, n, 4)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
-    if (which(dist==min(dist))>3){
+    if (which(dist==min(dist))[1]>3){
       tup[i,]<-t[i, c(1,4,5,6)]
     }
     else {
@@ -483,7 +483,7 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
   tup <- matrix(0, n, 4)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
-    if (which(dist==min(dist))>3){
+    if (which(dist==min(dist))[1]>3){
       tup[i,]<-t[i, c(1,4,5,6)]
     }
     else {
@@ -957,7 +957,7 @@ JG.plotterDinp<- function(Radius, J.pos, track, jlens, theme){
   tup<- matrix(0, n, 3)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
-    if (which(dist==min(dist))>3){
+    if (which(dist==min(dist))[1]>3){
       tup[i,]<-t[i, c(1,4,5)]
     }
     else {
@@ -1167,7 +1167,7 @@ GN.plotterDinp<- function(Radius, J.pos, track, jlens, theme){
   tup<- matrix(0, n, 3)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
-    if (which(dist==min(dist))>3){
+    if (which(dist==min(dist))[1]>3){
       tup[i,]<-t[i, c(1,4,5)]
     }
     else {
@@ -1266,7 +1266,7 @@ OJ.plotterDinp<- function(Radius, J.pos, track, jlens){#GeneName plotter
   tup<- matrix(0, n, 3)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
-    if (which(dist==min(dist))>3){
+    if (which(dist==min(dist))[1]>3){
       tup[i,]<-t[i, c(1,4,5)]
     }
     else {
@@ -1357,7 +1357,7 @@ JD.plotterDinp<- function(Radius, J.pos, track, jlens){
   tup <- matrix(0, n, 3)
   for (i in 1:n){
     dist<-abs(as.numeric(t[i,][2:5])-J)
-    if (which(dist==min(dist))>3){
+    if (which(dist==min(dist))[1]>3){
       tup[i,]<-t[i, c(1,4,5)]
     }
     else {
