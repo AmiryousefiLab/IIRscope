@@ -51,8 +51,8 @@ convert_gene<- function(gene_table, region_start, region_end, l){
           }
         }
       } else if (tmp[1] < region_end & tmp[2] > region_end){
-        if (res$gene[i] != gene_out_region_end){
-          if (res$gene[i] != gene_cut_by_start) {
+        if (!is.element(res$gene[i], gene_out_region_end)){
+          if (!is.element(res$gene[i], gene_cut_by_start)) {
             tmp2 <- res[i, ]
             tmp2$start<- region_end
             tmp2$pseudo <- TRUE
@@ -86,8 +86,8 @@ convert_gene<- function(gene_table, region_start, region_end, l){
           res[i, "strand"] <- ifelse(res[i, "strand"]=="+", "-", "+")
         }
       } else if (tmp[1] < region_start & tmp[2] > region_start){
-        if (res$gene[i] != gene_out_region_end ){
-          if (res$gene[i] != gene_cut_by_end){
+        if (!is.element(res$gene[i], gene_out_region_end)){
+          if (!is.element(res$gene[i], gene_cut_by_end)){
             tmp2 <- res[i, ]
             tmp2$end <- region_start
             tmp2$pseudo <- TRUE
@@ -122,8 +122,8 @@ convert_gene<- function(gene_table, region_start, region_end, l){
 
         }
       } else if (tmp[1] < region_end & tmp[2] > region_end){
-        if (res$gene[i] != gene_out_region_end){
-          if (res$gene[i] != gene_cut_by_start){
+        if (!is.element(res$gene[i], gene_out_region_end)){
+          if (!is.element(res$gene[i], gene_cut_by_start)){
             tmp2 <- res[i, ]
             tmp2$start<- region_end
             tmp2$pseudo <- TRUE

@@ -121,7 +121,7 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
   }
   else if(J.pos==4){
     pc<-jlens$jla.len
-    J<- IRList[[track]][2]+IRList[[track]][3]
+    J<- IRList[[track]][2]+IRList[[track]][3] %% IRList[[track]][4]
   } else {
     stop("J.pos missing or out bound. It should be either 1,2,3, 
              or 4 for JLB, JSB, JSA, and JLA, recpectively ")
@@ -300,38 +300,42 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
   
   if(n > 0){
     for (i in 1:n){
-      inside[[i]]$dista <- abs(inside[[i]]$position - J)
+      if(nrow(inside[[i]])==1){
+        ins_aux <- inside[[i]]
+      } else{
+        ins_aux <- inside[[i]][1,]
+      }
+      
+      ins_aux$dista <- abs(ins_aux$position - J)
       if(J.pos == 1 | J.pos == 3){
-        inside[[i]]$Pcord <- pc + (inside[[i]]$dista*half_ir_plotdist/Radius)
+        ins_aux$Pcord <- pc + (ins_aux$dista*half_ir_plotdist/Radius)
       } else {
-        inside[[i]]$Pcord <- pc - (inside[[i]]$dista*half_ir_plotdist/Radius)
+        ins_aux$Pcord <- pc - (ins_aux$dista*half_ir_plotdist/Radius)
       }
-      if(inside[[i]]$mismatch_type == 'replace'){
-        inside[[i]]$pch <- 21
-        inside[[i]]$col <- theme$replace.color
-      } else if(inside[[i]]$mismatch_type == 'delete') {
-        inside[[i]]$pch <- 24
-        inside[[i]]$col <- theme$delete.color
-      } else if(inside[[i]]$mismatch_type == 'insert') {
-        inside[[i]]$pch <- 23
-        inside[[i]]$col <- theme$insert.color
+      
+      if(ins_aux$mismatch_type == 'replace'){
+        ins_aux$pch <- 21
+        ins_aux$col <- theme$replace.color
+      } else if(ins_aux$mismatch_type == 'delete') {
+        ins_aux$pch <- 24
+        ins_aux$col <- theme$delete.color
+      } else if(ins_aux$mismatch_type == 'insert') {
+        ins_aux$pch <- 23
+        ins_aux$col <- theme$insert.color
       } else {
-        inside[[i]]$pch <- 21
+        ins_aux$pch <- 21
       }
-    }
-    
-    for (i in 1:n){
-      points(max(inside[[i]]$Pcord, pc-10), track*5+2.3+5, cex=0.7, 
-             pch=inside[[i]]$pch, bg=inside[[i]]$col, lwd=0.5)
-      # text(max(inside[[i]]$Pcord, pc-10), track*5+1.6+5, 
-      #      paste(inside[[i]]$position, inside[[i]]$string), 
+      
+      points(max(ins_aux$Pcord, pc-10), track*5+2.3+5, cex=0.7, 
+             pch=ins_aux$pch, bg=ins_aux$col, lwd=0.5)
+      # text(max(ins_aux$Pcord, pc-10), track*5+1.6+5, 
+      #      paste(ins_aux$position, ins_aux$string), 
       #      cex=0.4, col='black', pos=3)
-      segments(max(inside[[i]]$Pcord, pc-10), track*5+7, max(inside[[i]]$Pcord, pc-10), 
+      segments(max(ins_aux$Pcord, pc-10), track*5+7, max(ins_aux$Pcord, pc-10), 
                track*5+5.2, lty='dashed', lwd=0.5, col = theme$misline.color)
     }
   }
 }
-
 
 #' Gene Name plotter
 #'
@@ -368,7 +372,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
   }
   else if(J.pos==4){
     pc<-jlens$jla.len
-    J<- IRList[[track]][2]+IRList[[track]][3]
+    J<- IRList[[track]][2]+IRList[[track]][3] %% IRList[[track]][4]
   } else {
     stop("J.pos missing or out bound. It should be either 1,2,3, 
              or 4 for JLB, JSB, JSA, and JLA, recpectively ")
@@ -396,10 +400,16 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
   Rcord[,1]<-as.numeric(tup[,2])
   Rcord[,2]<-as.numeric(tup[,3])
   Pcord<- (Rcord-J)*bw+pc
+
   if (J.pos==4){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
+    if(Rcord[i,2]-Rcord[i,1] > 0){
+      bp_len <- Rcord[i,2]-Rcord[i,1]
+    } else {
+      bp_len <- Rcord[i,2]+(J-Rcord[i,1])
+    }
     x1 <- max(Pcord[i,1], pc-10)
     x2 <- min(Pcord[i,2], pc+10)
     if(tup[i,4] == '-'){
@@ -409,7 +419,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
       else if (abs(x1-x2) >= 9.7){
         text(min(x1, x2)+1.8, track*5+0.35+5, tup[i,1], cex=txtcex, col=txtin.color, 
              font=txtfont)
-        text(max(x1, x2)+1, track*5+0.3+5, paste(Rcord[i,2]-Rcord[i,1], "bp"), 
+        text(max(x1, x2)+1, track*5+0.3+5, paste(bp_len, "bp"), 
              cex=numcex, col=txtin.color, font=numfont, pos=2)
       }
       else if (abs(x1-x2) >= 3 & abs(x1-x2) < 9.7){
@@ -425,7 +435,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
       if (abs(x1-x2) >= 9.7){
         text(min(x1, x2)+1.8, track*5-1.40+5, tup[i,1], cex=txtcex, 
              col=txtin.color, font=txtfont)
-        text(max(x1, x2)+1, track*5-1.45+5, paste(Rcord[i,2]-Rcord[i,1], "bp"), 
+        text(max(x1, x2)+1, track*5-1.45+5, paste(bp_len, "bp"), 
              cex=numcex, col=txtin.color, font=numfont, pos=2)
       }
       else if (abs(x1-x2) >= 3 & abs(x1-x2) < 9.7){
@@ -471,7 +481,7 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
   }
   else if(J.pos==4){
     pc<-jlens$jla.len
-    J<- IRList[[track]][2]+IRList[[track]][3]
+    J<- IRList[[track]][2]+IRList[[track]][3] %% IRList[[track]][4]
   } else {
     stop("J.pos missing or out bound. It should be either 1,2,3, 
              or 4 for JLB, JSB, JSA, and JLA, recpectively ")
@@ -495,13 +505,15 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
   Rcord[,1] <- as.numeric(tup[,2])
   Rcord[,2] <- as.numeric(tup[,3])
   Pcord<- (Rcord-J)*bw+pc
+  
   if (J.pos==4){
     Pcord[Pcord < 0] <- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
   }
   for (i in 1:n){
     x1 <- max(Pcord[i,1], pc-10)
     x2 <- min(Pcord[i,2], pc+10)
-    if (Rcord[i,2] > J & Rcord[i,1] <J){
+    if ((Rcord[i,2] > J & Rcord[i,1] <J) | 
+        (Rcord[i,2] < Rcord[i,1] & (Rcord[i,2] - IRList[[track]][4]) < J & Rcord[i,1] >J)){
       if(tup[i,4] == '-'){
         Arrows(min(x1, x2), track*5+1.1+5, pc-0.15, track*5+1.1+5, 
                arr.type = "T", cex=0.5, arr.length = 0.12, lwd=0.5, arr.width = 0.4)
@@ -560,7 +572,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   }
   else if(J.pos==4){
     pc<-jlens$jla.len
-    J<- (IRList[[track]][2]+IRList[[track]][3]) %% IRList[[track]][4] # TODO: fix this everywhere else
+    J<- (IRList[[track]][2]+IRList[[track]][3]) %% IRList[[track]][4]
   } else {
     stop("J.pos missing or out bound. It should be either 1,2,3, 
              or 4 for JLB, JSB, JSA, and JLA, recpectively ")
@@ -588,9 +600,11 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
     Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
     Rcord[ind]<- Rcord[ind] + IRList[[track]][4]
   }
+
   counter<- 0
   for (i in 1:n){
-    if (Rcord[i,2] > J & Rcord[i,1] <J){
+    if ((Rcord[i,2] > J & Rcord[i,1] <J) | 
+        (Rcord[i,2] < Rcord[i,1] & (Rcord[i,2] - IRList[[track]][4]) < J & Rcord[i,1] >J)){
       counter<- counter+1
     }
   }
@@ -602,7 +616,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
     #If interested either put "=" for the middle condition of the left or right binary operator or better develop zero only handling if function
     x1 <- max(Pcord[row.cor,1], pc-10)
     x2 <- min(Pcord[row.cor,2], pc+10)
-    
+
     if (tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2 - x1 > 3){#top,right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5+1.3+5), 
@@ -620,9 +634,9 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
     }
     else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 > 3) {#low, right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
-                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5), 
-                   curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
-                   arr.length=0.08, arr.lwd=0.4, arr.pos=0.69, endhead=TRUE)
+                  to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5), 
+                  curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
+                  arr.length=0.08, arr.lwd=0.4, arr.pos=0.69, endhead=TRUE)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4, track*5-2.3-0.2+5, 
            paste(Rcord[row.cor, 1]-J, "bp"), cex=0.4)
     }
@@ -781,7 +795,7 @@ plot.data.aux <- function(radius, J.pos, l, jlens, theme){
   for (i in 1:l){OJ.plotter(radius[i], J.pos, i, jlens)}
   for (i in 1:l){JD.plotter(radius[i], J.pos, i, jlens)}
   for (i in 1:l){
-    if(!is.na(IndelList[[i]])){
+    if(!all(is.na(IndelList[[i]]))){
       JI.plotter(radius[i], J.pos, i, jlens, theme)
     }
   }
@@ -858,7 +872,7 @@ IRs2<- function(file="IR_out", theme, sample = FALSE){
       points(82.5, i, cex=2.3, pch=18, col='white')
       
       text(55, i, "//", cex=0.95, font=1)
-      if(is.na(IndelList[[count]])){
+      if(all(is.na(IndelList[[count]]))){
         text(27.5, i, "//", cex=0.95, font=1)
         text(82.5, i, "//", cex=0.95, font=1)
       }
