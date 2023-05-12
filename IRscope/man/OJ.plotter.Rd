@@ -23,5 +23,5 @@ None.
 }
 \description{
 Plotting the fine tuned narrow lines showing the limits of the genes which 
-are passing through the junction sites with their bp.
+are passing through the junction sites with their bp. |--x bp--|--y bp--|
 }

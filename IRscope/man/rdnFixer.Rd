@@ -2,7 +2,7 @@
 % Please edit documentation in R/parse_gb_file.R
 \name{rdnFixer}
 \alias{rdnFixer}
-\title{}
+\title{Randomly fill nucleotides}
 \usage{
 rdnFixer(gb)
 }
@@ -15,7 +15,7 @@ A large character vector. It countains the nucleotide sequence with
 all letters except "a", "t", "c", "g" changed.
 }
 \description{
-fasta<-gb[(grep("ORIGIN", gb)+1):length(gb)]
+
 }
 \details{
 

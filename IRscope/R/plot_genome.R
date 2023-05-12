@@ -263,6 +263,7 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
              or 4 for JLB, JSB, JSA, and JLA, recpectively ")
   }
   
+  # mid_inside indel (plotting number of indels)
   if(NROW(mid_inside) > 0){
     mismatches <- unique(mid_inside$mismatch_type)
     txt <- NULL
@@ -295,6 +296,7 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
     text(half_ir_plotdist+pc, track*5+4.5, "//", cex=0.95, font=1)
   }
   
+  # plotting indel appearing on plot
   inside <- JunctRadiusIndelFinder(indel_table, ir_info, J.pos, Radius)
   n <- length(inside)
   
@@ -326,12 +328,13 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
         ins_aux$pch <- 21
       }
       
-      points(max(ins_aux$Pcord, pc-10), track*5+2.4+5, cex=0.55, 
+      x0 <- min(max(ins_aux$Pcord, pc-10), pc+10)
+      points(x0, track*5+2.4+5, cex=0.55, 
              pch=ins_aux$pch, bg=ins_aux$col, lwd=0.5)
-      # text(max(ins_aux$Pcord, pc-10), track*5+1.6+5, 
+      # text(x0, track*5+1.6+5, 
       #      paste(ins_aux$position, ins_aux$string), 
       #      cex=0.4, col='black', pos=3)
-      segments(max(ins_aux$Pcord, pc-10), track*5+7, max(ins_aux$Pcord, pc-10), 
+      segments(x0, track*5+7, x0, 
                track*5+5.2, lty='dashed', lwd=0.5, col = theme$misline.color)
     }
   }
@@ -453,7 +456,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
 #' On Junction plotter
 #'
 #' Plotting the fine tuned narrow lines showing the limits of the genes which 
-#' are passing through the junction sites with their bp. --x bp--|--y bp--
+#' are passing through the junction sites with their bp. |--x bp--|--y bp--|
 #' 
 #' @param Radius number with the radius wanted.
 #' @param J.pos The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
@@ -636,36 +639,42 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
     #If interested either put "=" for the middle condition of the left or right binary operator or better develop zero only handling if function
     x1 <- max(Pcord[row.cor,1], pc-10)
     x2 <- min(Pcord[row.cor,2], pc+10)
+    
+    dist_bp_right <- Rcord[row.cor, 1]-J
+    dist_bp_left <- J-Rcord[row.cor, 2]
+    # TODO: Adjust distances to the arrows with their size
+    #offset_dist_bp_right <- n_int_digits(dist_bp_right) - 2 #+
+    #offset_dist_bp_left <- n_int_digits(dist_bp_left) - 2 #-
 
     if (tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2 - x1 > 3){#top,right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5+1.3+5), 
                   curve = -0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
                   arr.length=0.08, arr.lwd=0.4, arr.pos=0.69, endhead=TRUE)
-      text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4, track*5+1.3+0.2+5, 
-           paste(Rcord[row.cor, 1]-J, "bp"), cex=cex_txt)
+      text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 5, track*5+1.3+0.2+5, 
+           paste(dist_bp_right, "bp"), cex=cex_txt)
     }
     else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3 ) {#top, right, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5 , 
              pc+(Pcord[row.cor, col.cor]-pc)/2 -2 , track*5+1.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
-      text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4.5 , track*5+1.3+0.2+5, 
-           paste(Rcord[row.cor, 1]-J, "bp"), cex=cex_txt)
+      text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 5.5, track*5+1.3+0.2+5, 
+           paste(dist_bp_right, "bp"), cex=cex_txt)
     }
     else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 > 3) {#low, right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5), 
                   curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
                   arr.length=0.08, arr.lwd=0.4, arr.pos=0.69, endhead=TRUE)
-      text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4, track*5-2.3-0.2+5, 
-           paste(Rcord[row.cor, 1]-J, "bp"), cex=cex_txt)
+      text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 5, track*5-2.3-0.2+5, 
+           paste(dist_bp_right, "bp"), cex=cex_txt)
     }
     else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3) {#low, right, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 -3, track*5-2.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
-      text(pc+(Pcord[row.cor, col.cor]-pc)/2 -4.5 , track*5-2.3-0.2+5, 
-           paste(Rcord[row.cor, 1]-J, "bp"), cex=cex_txt)
+      text(pc+(Pcord[row.cor, col.cor]-pc)/2 -5.5 + 1, track*5-2.3-0.2+5, 
+           paste(dist_bp_right, "bp"), cex=cex_txt)
     }
     else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#low, left, big
       curvedarrow (from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
@@ -673,29 +682,29 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
                    curve = -0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
                    arr.length=0.08, arr.lwd=0.4, arr.pos=0.69, endhead=TRUE)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4, track*5-2.3-0.2+5, 
-           paste(J-Rcord[row.cor, 2], "bp"), cex=cex_txt)
+           paste(dist_bp_left, "bp"), cex=cex_txt)
     }
     else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#low, left, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
-      text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4.5 , track*5-2.3-0.2+5, 
-           paste(J-Rcord[row.cor, 2], "bp"), cex=cex_txt)
+      text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4.5, track*5-2.3-0.2+5, 
+           paste(dist_bp_left, "bp"), cex=cex_txt)
     }
     else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#top, left, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 - 3, track*5+1.3+5), 
                   curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
                   arr.length=0.08, arr.lwd=0.4, arr.pos=0.69, endhead=TRUE)
-      text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4.5 , track*5+1.3+0.2+5, 
-           paste(J-Rcord[row.cor, 2], "bp"), cex=cex_txt)
+      text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4.5, track*5+1.3+0.2+5, 
+           paste(dist_bp_left, "bp"), cex=cex_txt)
     }
     else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#top, left, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 + 2 , track*5+1.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4, track*5+1.3+0.2+5, 
-           paste(J-Rcord[row.cor, 2], "bp"), cex=cex_txt)
+           paste(dist_bp_left, "bp"), cex=cex_txt)
     }
   }
 }
@@ -767,6 +776,18 @@ chr.count<- function(word){
     }
     return(t)
   }
+}
+
+#' Number character count
+#'
+#' Counts how many characters a number has
+#' 
+#' @param x number
+#' @return number of characters
+n_int_digits <- function(x) {
+  result = floor(log10(abs(x)))
+  result[!is.finite(result)] = 0
+  result
 }
 
 #' LSC place

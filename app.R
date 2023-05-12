@@ -1,17 +1,54 @@
-library(shiny)
-library(shinyjs)
-library(shinyvalidate)
-library(shinyWidgets)
-library(shinyalert)
-library(purrr)
-library(seqinr)
-library(colourpicker)
-library(markdown)
-library(rmarkdown)
+if(!require(shiny, quietly = TRUE)){
+  install.packages("shiny")
+  library(shiny)
+}
+if(!require(shinyjs, quietly = TRUE)){
+  install.packages("shinyjs")
+  library(shinyjs)
+}
+if(!require(shinyWidgets, quietly = TRUE)){
+  install.packages("shinyWidgets")
+  library(shinyWidgets)
+}
+if(!require(shinyalert, quietly = TRUE)){
+  install.packages("shinyalert")
+  library(shinyalert)
+}
+if(!require(shinyvalidate, quietly = TRUE)){
+  install.packages("shinyvalidate")
+  # library(shinyvalidate)
+}
+if(!require(purrr, quietly = TRUE)){
+  install.packages("purrr")
+  library(shinyjs)
+}
+if(!require(purrr, quietly = TRUE)){
+  install.packages("purrr")
+  library(purrr)
+}
+if(!require(seqinr, quietly = TRUE)){
+  install.packages("seqinr")
+  library(seqinr)
+}
+if(!require(colourpicker, quietly = TRUE)){
+  install.packages("colourpicker")
+  library(colourpicker)
+}
+if(!require(markdown, quietly = TRUE)){
+  install.packages("markdown")
+  library(markdown)
+}
+if(!require(rmarkdown, quietly = TRUE)){
+  install.packages("rmarkdown")
+  library(rmarkdown)
+}
+if(!require(httpuv, quietly = TRUE)){
+  install.packages("httpuv")
+  library(httpuv)
+}
 
-library(httpuv)
-
-library(BiocManager)
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
 options(repos = BiocManager::repositories())
 
 pkgload::load_all(path = "IRscope")
@@ -487,7 +524,7 @@ ui <- fluidPage(
 #### SERVER SECTION ####
 server <- function(input, output, session) {
   #### Input validator section ####
-  iv <- InputValidator$new()
+  iv <- shinyvalidate::InputValidator$new()
   iv$add_rule("nGB", sv_between(1, 20))
   iv$add_rule("nManual", sv_between(1, 20))
   iv$enable()

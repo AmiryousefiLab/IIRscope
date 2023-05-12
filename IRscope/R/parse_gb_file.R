@@ -182,12 +182,10 @@ readOrigin = function(lines, seqtype = "bp") {
 #' }
  
 
-#' Randomly fill nucleotides
-#'
-#' This fuction change liters "u", "r", "y", "s", "w", "k", "m", "b", "d", "h",
+#' @title Randomly fill nucleotides
+#' @details This fuction change liters "u", "r", "y", "s", "w", "k", "m", "b", "d", "h",
 #' "v", "n" or "-" in genome sequence (randomly) into corresponding nucleotide
 #' "a", "t", "c" or "g".
-#'
 #' @param genome A DNAString object. It is a class defined in \code{Biostrings}
 #' package. It contains the whole genome sequence of a specie.
 #' @return A large character vector. It countains the nucleotide sequence with

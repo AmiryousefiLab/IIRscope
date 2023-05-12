@@ -2,20 +2,20 @@
 % Please edit documentation in R/gene_info.R
 \name{SSCrev}
 \alias{SSCrev}
-\title{Reverse SSC section in the plot}
+\title{Reverse SSC section in the plot.}
 \usage{
-SSCrev(genecord, SSCs, SSCe)
+SSCrev(g, SSC_start, SSC_end)
 }
 \arguments{
-\item{genecord}{gene coordinates for SSC region.}
+\item{g}{gene coordinates for SSC region.}
 
-\item{SSCe}{number: SSC end}
+\item{SSC_start}{number: SSC start}
 
-\item{SScs}{number: SSC ini}
+\item{SSC_end}{number: SSC end}
 }
 \value{
-genecord edited to be reversed.
+g edited to be reversed.
 }
 \description{
-Reverse SSC section in the plot
+Reverse SSC section in the plot.
 }

@@ -4,7 +4,7 @@
 \alias{Max.RadiusDinp}
 \title{Max radius finder}
 \usage{
-Max.RadiusDinp(J.pos, l, genelist, IRlistDinp)
+Max.RadiusDinp(J.pos, l, genelist, irlistDinp)
 }
 \arguments{
 \item{J.pos}{The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
