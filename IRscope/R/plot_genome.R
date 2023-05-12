@@ -1163,12 +1163,13 @@ JI.plotterDinp<- function(Radius, J.pos, track, jlens, theme){
     }
     
     for (i in 1:n){
-      points(max(inside[[i]]$Pcord, pc-10), track*5+2.3+5, cex=0.7, 
+      x0 <- min(max(inside[[i]]$Pcord, pc-10), pc+10)
+      points(x0, track*5+2.3+5, cex=0.7, 
              pch=inside[[i]]$pch, col=inside[[i]]$col)
-      # text(max(inside[[i]]$Pcord, pc-10), track*5+1.6+5, 
+      # text(x0, track*5+1.6+5, 
       #      paste(inside[[i]]$position, inside[[i]]$string), 
       #      cex=0.4, col='black', pos=3)
-      segments(max(inside[[i]]$Pcord, pc-10), track*5+7, max(inside[[i]]$Pcord, pc-10), 
+      segments(x0, track*5+7, x0, pc-10), 
                track*5+5.2, lty='dashed', lwd=1, col = theme$misline.color)
     }
   }
