@@ -18,7 +18,8 @@ and 4 respectively}
 
 \item{silence}{boolean}
 
-\item{Irinfo}{vector with ira start, irb start, ir length and genome length.}
+\item{Irinfo}{vector with ira start, irb start, ira length, irb length
+and genome length.}
 }
 \value{
 gene list

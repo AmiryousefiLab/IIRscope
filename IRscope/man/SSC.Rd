@@ -7,7 +7,8 @@
 SSC(IRinfo)
 }
 \arguments{
-\item{IRinfo}{vector with ira start, irb start, ir length and genome length.}
+\item{IRinfo}{vector with ira start, irb start, ira length, irb length and 
+genome length.}
 }
 \value{
 number: place where SSC starts.

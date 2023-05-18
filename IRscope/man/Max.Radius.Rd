@@ -14,7 +14,7 @@ and 4 respectively.}
 
 \item{genelist}{list with the genes.}
 
-\item{IRlist}{vector with ira start, irb start, ir length and genome length.}
+\item{IRlist}{vector with ira start, irb start, ira length, irb length and genome length.}
 }
 \value{
 list with the radius for each species (the same if they are similar,

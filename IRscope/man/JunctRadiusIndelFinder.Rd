@@ -11,7 +11,7 @@ JunctRadiusIndelFinder(indel_table, IRinfo, J.pos, radius)
 \item{indel_table}{dataframe with mismatches given by \code{\link{get_ir}} 
 function.}
 
-\item{IRinfo}{vector with ira start, irb start, ir length and genome length.}
+\item{IRinfo}{vector with ira start, irb start, ira length, irb length and genome length.}
 
 \item{J.pos}{The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
 and 4 respectively}

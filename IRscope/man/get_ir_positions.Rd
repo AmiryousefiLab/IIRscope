@@ -16,7 +16,8 @@ A list with:
 \itemize{
    \item IRA_start: gene where IRA starts.
    \item IRB_start: gene where IRB starts.
-   \item IR_len: length of the inverted repeats.
+   \item IRA_len: length of the inverted repeats A.
+   \item IRB_len: length of the inverted repeats B.
    \item gene_len: length of the genome.
 }
 }
