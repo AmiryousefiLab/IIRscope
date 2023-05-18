@@ -3,12 +3,50 @@
 
 #### This section contains the functions related to the gbfiles input ####
 
+#' get_pc_J
+#' 
+#' Get pc and J values auxiliar function
+#'
+#' @param J.pos The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
+#' and 4 respectively.
+#' @param jlens named list with the distance in the plot for the junction sites, 
+#' in the same order as J.pos: jlb.len, jsb.len, jsa.len, jla.len.
+#' @param ir_info ir information for the genome
+#' @return list with pc (position on the plot for that junction) and J (position
+#' position on the genome of the junction)
+get_pc_J<- function(J.pos, jlens, ir_info){
+  if(J.pos==1){
+    pc<-jlens$jlb.len
+    J<- ir_info[1]
+  }
+  else if(J.pos==2){
+    pc<-jlens$jsb.len
+    J <- ir_info[1]+ir_info[3]
+    if(J > ir_info[5]){
+      J <- J-ir_info[5]
+    }
+  }
+  else if(J.pos==3){
+    pc<-jlens$jsa.len
+    J<- ir_info[2]
+  }
+  else if(J.pos==4){
+    pc<-jlens$jla.len
+    J<- ir_info[2]+ir_info[4] # %% ir_info[5]
+  } else {
+    stop("J.pos missing or out bound. It should be either 1,2,3, 
+             or 4 for JLB, JSB, JSA, and JLA, recpectively ")
+  }
+  return(list("pc"=pc,"J"=J))
+}
+
 #' Find the genes near the junction coordinate based on the output of 
 #' the \code{\link{gene.cordinate}} function.
 #'
 #' @param gene.cordinates cordinates given by the \code{\link{gene.cordinate}} 
 #' function.
-#' @param Irinfo vector with ira start, irb start, ir length and genome length.
+#' @param Irinfo vector with ira start, irb start, ira length, irb length
+#' and genome length.
 #' @param J.pos The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
 #' and 4 respectively
 #' @param radius number with the radius wanted
@@ -25,14 +63,14 @@ JunctRadiusGeneFinder<- function(gene.cordinates, IRinfo, J.pos, radius, silence
     J<- IRinfo[2]
   }
   else if(J.pos==4){
-    J<- IRinfo[2]+IRinfo[3]
+    J<- IRinfo[2]+IRinfo[4]
   }
   else {
     stop("J.pos missing or out bound. It should be either 1,2,3, or 4 for JLB, JSB, JSA, and JLA, recpectively ")
   }
   g<-gene.cordinates
   r<- radius
-  gs<- IRinfo[4]
+  gs<- IRinfo[5]
   t1<- subset(g, J-r<as.numeric(g[,2]) & as.numeric(g[,2])<J+r)
   t2<- subset(g, J-r<as.numeric(g[,3]) & as.numeric(g[,3])<J+r)
   t3<- subset(g, J-r<as.numeric(g[,4]) & as.numeric(g[,4])<J+r)
@@ -67,7 +105,7 @@ JunctRadiusGeneFinder<- function(gene.cordinates, IRinfo, J.pos, radius, silence
       diffs <- rep(NA, rows)
       for(i in 1:rows){
         if(df$gene[(i)%%rows+1] == df$gene[i]){
-          diffs[[(i)%%rows+1]] <- (df$start[(i)%%rows+1] - df$end[i])%%IRinfo[4]
+          diffs[[(i)%%rows+1]] <- (df$start[(i)%%rows+1] - df$end[i])%%IRinfo[5]
         }
       }
       # We change the end value for the genes that are together
@@ -103,31 +141,12 @@ JunctRadiusGeneFinder<- function(gene.cordinates, IRinfo, J.pos, radius, silence
 #' @param theme dataframe with the colors chosen on the web.
 #' @return None.
 JG.plotter<- function(Radius, J.pos, track, jlens, theme){
-  if(J.pos==1){
-    pc<-jlens$jlb.len
-    J<- IRList[[track]][1]
-  }
-  else if(J.pos==2){
-    pc<-jlens$jsb.len
-    J <- IRList[[track]][1]+IRList[[track]][3]
-    #print(IRList[[track]][1]+IRList[[track]][3] %% IRList[[track]][4])
-    if(J > IRList[[track]][4]){
-      J <- J-IRList[[track]][4]
-    }
-  }
-  else if(J.pos==3){
-    pc<-jlens$jsa.len
-    J<- IRList[[track]][2]
-  }
-  else if(J.pos==4){
-    pc<-jlens$jla.len
-    J<- IRList[[track]][2]+IRList[[track]][3] %% IRList[[track]][4]
-  } else {
-    stop("J.pos missing or out bound. It should be either 1,2,3, 
-             or 4 for JLB, JSB, JSA, and JLA, recpectively ")
-  }
-  
-  t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
+  ir_info <- IRList[[track]]
+  aux_list<- get_pc_J(J.pos, jlens, ir_info)
+  pc <- aux_list$pc
+  J <- aux_list$J
+
+  t<- JunctRadiusGeneFinder(GeneList[[track]], ir_info, J.pos , Radius)
   t[is.na(t)]<- "0"
   n<- length(t[,1])
   tup <- matrix(0, n, 4)
@@ -168,7 +187,7 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
     return(col)
   }
   if (J.pos==4){
-    Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
+    Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + ir_info[5])-J)*bw+pc
   }
   for (i in 1:n){
     x1 <- max(Pcord[i,1], pc-10)
@@ -192,7 +211,7 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
 #'
 #' @param indel_table dataframe with mismatches given by \code{\link{get_ir}} 
 #' function.
-#' @param IRinfo vector with ira start, irb start, ir length and genome length.
+#' @param IRinfo vector with ira start, irb start, ira length, irb length and genome length.
 #' @param J.pos The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
 #' and 4 respectively
 #' @param radius number with the radius wanted
@@ -205,7 +224,7 @@ JunctRadiusIndelFinder<- function(indel_table, IRinfo, J.pos, radius){
   } else if(J.pos==3){
     J<- IRinfo[2]
   } else if(J.pos==4){
-    J<- IRinfo[2]+IRinfo[3]
+    J<- IRinfo[2]+IRinfo[4]
   } else {
     stop("J.pos missing or out bound. It should be either 1,2,3, or 4 for JLB, JSB, JSA, and JLA, recpectively ")
   }
@@ -215,7 +234,7 @@ JunctRadiusIndelFinder<- function(indel_table, IRinfo, J.pos, radius){
   for(i in 1:n){
     indel_pos <- indel_table$position[i]
     if((J-radius < indel_pos) & (J+radius > indel_pos)
-       | (J-radius < indel_pos + IRinfo[4]) & (J+radius > indel_pos + IRinfo[4])){
+       | (J-radius < indel_pos + IRinfo[5]) & (J+radius > indel_pos + IRinfo[5])){
       inside <- c(inside, list(indel_table[indel_table$position == indel_pos, ]))
     }
   }
@@ -254,10 +273,10 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
   } else if(J.pos==3){
     pc<-jlens$jsa.len
     J<- ir_info[2]
-    mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[3] - Radius))
+    mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[4] - Radius))
   } else if(J.pos==4){
     pc<-jlens$jla.len
-    J<- ir_info[2]+ir_info[3]
+    J<- ir_info[2]+ir_info[4]
   } else {
     stop("J.pos missing or out bound. It should be either 1,2,3, 
              or 4 for JLB, JSB, JSA, and JLA, recpectively ")
@@ -287,7 +306,7 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
         txt <- paste(txt, paste0(nmis, '+'), sep = ', ')
       }
     }
-    points(half_ir_plotdist+pc, track*5+2.4+5, cex=0.55, 
+    points(half_ir_plotdist+pc, track*5+2.5+5, cex=0.55, 
            pch=6, col=theme$midmis.color)
     text(half_ir_plotdist+pc, track*5+4.5, txt, cex=0.25, font=4)
     segments(half_ir_plotdist+pc, track*5+7, half_ir_plotdist+pc,
@@ -329,7 +348,7 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
       }
       
       x0 <- min(max(ins_aux$Pcord, pc-10), pc+10)
-      points(x0, track*5+2.4+5, cex=0.55, 
+      points(x0, track*5+2.5+5, cex=0.55, 
              pch=ins_aux$pch, bg=ins_aux$col, lwd=0.5)
       # text(x0, track*5+1.6+5, 
       #      paste(ins_aux$position, ins_aux$string), 
@@ -357,35 +376,16 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
 GN.plotter<- function(Radius, J.pos, track, jlens, theme){  
   txtin.color <- theme$txtin.color
   txtout.color <- theme$txtout.color
-  
-  if(J.pos==1){
-    pc<-jlens$jlb.len
-    J<- IRList[[track]][1]
-  }
-  else if(J.pos==2){
-    pc<-jlens$jsb.len
-    J<- IRList[[track]][1]+IRList[[track]][3]
-    if(J > IRList[[track]][4]){
-      J <- J-IRList[[track]][4]
-    }
-  }
-  else if(J.pos==3){
-    pc<-jlens$jsa.len
-    J<- IRList[[track]][2]
-  }
-  else if(J.pos==4){
-    pc<-jlens$jla.len
-    J<- IRList[[track]][2]+IRList[[track]][3] %% IRList[[track]][4]
-  } else {
-    stop("J.pos missing or out bound. It should be either 1,2,3, 
-             or 4 for JLB, JSB, JSA, and JLA, recpectively ")
-  }
+  ir_info <- IRList[[track]]
+  aux_list<- get_pc_J(J.pos, jlens, ir_info)
+  pc <- aux_list$pc
+  J <- aux_list$J
   
   txtfont<- 4
   numfont<- 1
   numcex<- 0.44
   txtcex<- 0.43
-  t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
+  t<- JunctRadiusGeneFinder(GeneList[[track]], ir_info, J.pos , Radius)
   t[is.na(t)]<- "0"
   n<- length(t[,1])
   tup <- matrix(0, n, 4)
@@ -405,7 +405,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
   Pcord<- (Rcord-J)*bw+pc
 
   if (J.pos==4){
-    Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
+    Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + ir_info[5])-J)*bw+pc
   }
   for (i in 1:n){
     if(Rcord[i,2]-Rcord[i,1] > 0){
@@ -467,30 +467,12 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
 #' in the same order as J.pos: jlb.len, jsb.len, jsa.len, jla.len.
 #' @return None.
 OJ.plotter <- function(Radius, J.pos, track, jlens){
-  if(J.pos==1){
-    pc<-jlens$jlb.len
-    J<- IRList[[track]][1]
-  }
-  else if(J.pos==2){
-    pc<-jlens$jsb.len
-    J<- IRList[[track]][1]+IRList[[track]][3]
-    if(J > IRList[[track]][4]){
-      J <- J-IRList[[track]][4]
-    }
-  }
-  else if(J.pos==3){
-    pc<-jlens$jsa.len
-    J<- IRList[[track]][2]
-  }
-  else if(J.pos==4){
-    pc<-jlens$jla.len
-    J<- IRList[[track]][2]+IRList[[track]][3] %% IRList[[track]][4]
-  } else {
-    stop("J.pos missing or out bound. It should be either 1,2,3, 
-             or 4 for JLB, JSB, JSA, and JLA, recpectively ")
-  }
+  ir_info <- IRList[[track]]
+  aux_list<- get_pc_J(J.pos, jlens, ir_info)
+  pc <- aux_list$pc
+  J <- aux_list$J
   
-  t <- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
+  t <- JunctRadiusGeneFinder(GeneList[[track]], ir_info, J.pos , Radius)
   t[is.na(t)] <- "0"
   n <- length(t[,1])
   tup <- matrix(0, n, 4)
@@ -513,13 +495,13 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
   t_size <- 0.06
   
   if (J.pos==4){
-    Pcord[Pcord < 0] <- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
+    Pcord[Pcord < 0] <- ((Rcord[which(Pcord< 0)] + ir_info[5])-J)*bw+pc
   }
   for (i in 1:n){
     x1 <- max(Pcord[i,1], pc-10)
     x2 <- min(Pcord[i,2], pc+10)
     if ((Rcord[i,2] > J & Rcord[i,1] <J) | 
-        (Rcord[i,2] < Rcord[i,1] & (Rcord[i,2] - IRList[[track]][4]) < J & Rcord[i,1] >J)){
+        (Rcord[i,2] < Rcord[i,1] & (Rcord[i,2] - ir_info[5]) < J & Rcord[i,1] >J)){
       if(tup[i,4] == '-'){
         if (abs(x1-x2) < 3){ #space too small, they appear upper to not be on the same place as the gene name
           y0_arrow <- track*5+1.5+5
@@ -577,29 +559,13 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
 #' in the same order as J.pos: jlb.len, jsb.len, jsa.len, jla.len.
 #' @return None.
 JD.plotter <- function(Radius, J.pos, track, jlens){
-  if(J.pos==1){
-    pc<-jlens$jlb.len
-    J<- IRList[[track]][1]
-  }
-  else if(J.pos==2){
-    pc<-jlens$jsb.len
-    J<- (IRList[[track]][1]+IRList[[track]][3]) #%% IRList[[track]][4]
-    if(J > IRList[[track]][4]){
-      J <- J-IRList[[track]][4]
-    }
-  }
-  else if(J.pos==3){
-    pc<-jlens$jsa.len
-    J<- IRList[[track]][2]
-  }
-  else if(J.pos==4){
-    pc<-jlens$jla.len
-    J<- (IRList[[track]][2]+IRList[[track]][3]) %% IRList[[track]][4]
-  } else {
-    stop("J.pos missing or out bound. It should be either 1,2,3, 
-             or 4 for JLB, JSB, JSA, and JLA, recpectively ")
-  }
-  t<- JunctRadiusGeneFinder(GeneList[[track]], IRList[[track]], J.pos , Radius)
+  ir_info <- IRList[[track]]
+  aux_list<- get_pc_J(J.pos, jlens, ir_info)
+  pc <- aux_list$pc
+  J <- aux_list$J
+  if (J.pos == 4) J <- (ir_info[2]+ir_info[4]) %% ir_info[5] # TODO: why is it not working? bc later ifs?
+  
+  t<- JunctRadiusGeneFinder(GeneList[[track]], ir_info, J.pos , Radius)
   t[is.na(t)]<- "0"
   n<- length(t[,1])
   tup <- matrix(0, n, 4)
@@ -620,17 +586,18 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
   cex_txt <- 0.39
   if (J.pos==4){
     ind<-Pcord < 0
-    Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + IRList[[track]][4])-J)*bw+pc
-    Rcord[ind]<- Rcord[ind] + IRList[[track]][4]
+    Pcord[Pcord < 0]<- ((Rcord[which(Pcord< 0)] + ir_info[5])-J)*bw+pc
+    Rcord[ind]<- Rcord[ind] + ir_info[5]
   }
 
   counter<- 0
   for (i in 1:n){
     if ((Rcord[i,2] > J & Rcord[i,1] <J) | 
-        (Rcord[i,2] < Rcord[i,1] & (Rcord[i,2] - IRList[[track]][4]) < J & Rcord[i,1] >J)){
+        (Rcord[i,2] < Rcord[i,1] & (Rcord[i,2] - ir_info[5]) < J & Rcord[i,1] >J)){
       counter<- counter+1
     }
   }
+  
   if (counter==0){#find the closest gene to the junction site
     nearest<- which(abs(Pcord-pc)==min(abs(Pcord-pc)))
     col.cor<- floor((nearest-0.01)/n)+1
@@ -721,7 +688,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
 #' and 4 respectively.
 #' @param l number of species to plot.
 #' @param genelist list with the genes.
-#' @param IRlist vector with ira start, irb start, ir length and genome length.
+#' @param IRlist vector with ira start, irb start, ira length, irb length and genome length.
 #' @return list with the radius for each species (the same if they are similar,
 #' different if they are not similar species).
 #' @export
@@ -794,23 +761,25 @@ n_int_digits <- function(x) {
 #'
 #' Gives where LSC starts
 #' 
-#' @param IRinfo vector with ira start, irb start, ir length and genome length.
+#' @param IRinfo vector with ira start, irb start, ira length, irb length and 
+#' genome length.
 #' @return number: place where LSC starts.
 LSC<- function(IRinfo){
   c<-as.vector(IRinfo)
-  return(c[4]-(SSC(IRinfo)+2*c[3]))
+  return(c[5]-(SSC(IRinfo)+c[3]+c[4]))
 }
 
 #' SSC place
 #'
 #' Gives where SSC starts
 #' 
-#' @param IRinfo vector with ira start, irb start, ir length and genome length.
+#' @param IRinfo vector with ira start, irb start, ira length, irb length and 
+#' genome length.
 #' @return number: place where SSC starts.
 SSC<- function(IRinfo){
   c<-as.vector(IRinfo)
   if(c[1]>c[2]){
-    return(c[1]-(c[2]+c[3]))
+    return(c[1]-(c[2]+c[4]))
   } else { 
     return(c[2]-(c[1]+c[3]))
   }
@@ -898,7 +867,7 @@ IRs2<- function(file="IR_out", theme, sample = FALSE){
     text(jlens$jla.len, 5*l_aux+9, "JLA", font=4, cex=0.7)
     
     for (i in seq(9.5, 5*l_aux+9, 5)){
-      count<-which(seq(9.5, 5*l_aux+9, 5)==i)
+      track<-which(seq(9.5, 5*l_aux+9, 5)==i)
       
       # sections names
       text(101, i, "LSC", cex=0.57, font=2, col=theme$txtin.color)
@@ -913,23 +882,24 @@ IRs2<- function(file="IR_out", theme, sample = FALSE){
       points(82.5, i, cex=2.3, pch=18, col='white')
       
       text(55, i, "//", cex=0.95, font=1)
-      if(all(is.na(IndelList[[count]]))){
+      if(all(is.na(IndelList[[track]]))){
         text(27.5, i, "//", cex=0.95, font=1)
         text(82.5, i, "//", cex=0.95, font=1)
       }
       
       # bp count in each section
-      LSCp<-paste(prettyNum(LSC(IRList[[count]]), big.mark = ","), "bp", "")
-      SSCp<-paste(prettyNum(SSC(IRList[[count]]), big.mark = ","), "bp", "")
-      IRp<- paste(prettyNum(IRList[[count]][3], big.mark = ","), "bp", "")
+      LSCp<-paste(prettyNum(LSC(IRList[[track]]), big.mark = ","), "bp", "")
+      SSCp<-paste(prettyNum(SSC(IRList[[track]]), big.mark = ","), "bp", "")
+      IRA<- paste(prettyNum(IRList[[track]][3], big.mark = ","), "bp", "")
+      IRB<- paste(prettyNum(IRList[[track]][4], big.mark = ","), "bp", "")
       
       text(10.5, i-0.09, LSCp, font=4, cex=0.52, col=theme$inbp.color)
       text(64.5, i-0.09, SSCp, font=4, cex=0.52, col=theme$inbp.color)
-      text(35.5, i-0.09, IRp, font=4, cex=0.52, col=theme$inbp.color)
-      text(90, i-0.09, IRp, font=4, cex=0.52, col=theme$inbp.color)
+      text(35.5, i-0.09, IRA, font=4, cex=0.52, col=theme$inbp.color)
+      text(90, i-0.09, IRB, font=4, cex=0.52, col=theme$inbp.color)
       
       # total bp count
-      axis(2, i-1.5, labels = paste0(prettyNum(IRList[[count]][4], big.mark=","), "bp"), 
+      axis(2, i-1.5, labels = paste0(prettyNum(IRList[[track]][5], big.mark=","), "bp"), 
            font = 4, cex.axis=0.7, las=2, tick=F)
     }
     # species names
@@ -969,7 +939,8 @@ IRs2<- function(file="IR_out", theme, sample = FALSE){
 }
 
 #### This section contains the functions related to the manual files input ####
-# TODO: join this functions to the ones above.
+# TODO: join this functions to the ones above. Else update them according to the 
+#       ones on top.
 
 
 #' #' Junction site gene plotter for dogma and fasta files
@@ -1169,7 +1140,7 @@ JI.plotterDinp<- function(Radius, J.pos, track, jlens, theme){
       # text(x0, track*5+1.6+5, 
       #      paste(inside[[i]]$position, inside[[i]]$string), 
       #      cex=0.4, col='black', pos=3)
-      segments(x0, track*5+7, x0, pc-10), 
+      segments(x0, track*5+7, x0, 
                track*5+5.2, lty='dashed', lwd=1, col = theme$misline.color)
     }
   }
@@ -1681,7 +1652,7 @@ IRsD2<- function(file="IR_out", theme, sample = FALSE){
     text(jlens$jla.len, 5*l_aux+9, "JLA", font=4, cex=0.7)
     
     for (i in seq(9.5, 5*l_aux+9, 5)){
-      count<-which(seq(9.5, 5*l_aux+9, 5)==i)
+      track<-which(seq(9.5, 5*l_aux+9, 5)==i)
       
       # sections names
       text(101, i, "LSC", cex=0.57, font=2, col=theme$txtin.color)
@@ -1696,16 +1667,16 @@ IRsD2<- function(file="IR_out", theme, sample = FALSE){
       points(82.5, i, cex=2.3, pch=18, col='white')
       
       text(55, i, "//", cex=0.95, font=1)
-      if(is.na(IndelList[[count]])){
+      if(is.na(IndelList[[track]])){
         text(27.5, i, "//", cex=0.95, font=1)
         text(82.5, i, "//", cex=0.95, font=1)
       }
       
       # bp count in each section
-      LSCp<-paste(prettyNum(LSCDinp(IRListDinp[[count]]), big.mark = ","), "bp", "")
-      SSCp<-paste(prettyNum(SSCDinp(IRListDinp[[count]]), big.mark = ","), "bp", "")
-      IRpb<- paste(prettyNum((IRListDinp[[count]][2]-IRListDinp[[count]][1]), big.mark = ","), "bp", "")
-      IRpa<- paste(prettyNum((IRListDinp[[count]][4]-IRListDinp[[count]][3]), big.mark = ","), "bp", "")
+      LSCp<-paste(prettyNum(LSCDinp(IRListDinp[[track]]), big.mark = ","), "bp", "")
+      SSCp<-paste(prettyNum(SSCDinp(IRListDinp[[track]]), big.mark = ","), "bp", "")
+      IRpb<- paste(prettyNum((IRListDinp[[track]][2]-IRListDinp[[track]][1]), big.mark = ","), "bp", "")
+      IRpa<- paste(prettyNum((IRListDinp[[track]][4]-IRListDinp[[track]][3]), big.mark = ","), "bp", "")
       
       text(10.5, i-0.09, LSCp, font=4, cex=0.52, col=theme$inbp.color)
       text(64.5, i-0.09, SSCp, font=4, cex=0.52, col=theme$inbp.color)
@@ -1713,7 +1684,7 @@ IRsD2<- function(file="IR_out", theme, sample = FALSE){
       text(90, i-0.09, IRpa, font=4, cex=0.52, col=theme$inbp.color)
       
       # total bp count
-      axis(2, i-1.5, labels = paste0(prettyNum(IRListDinp[[count]][4], big.mark=","), "bp"), 
+      axis(2, i-1.5, labels = paste0(prettyNum(IRListDinp[[track]][4], big.mark=","), "bp"), 
            font = 4, cex.axis=0.7, las=2, tick=F)
     }
     

@@ -49,30 +49,34 @@ get_ir <- function(genome){
 #' \itemize{
 #'    \item IRA_start: gene where IRA starts.
 #'    \item IRB_start: gene where IRB starts.
-#'    \item IR_len: length of the inverted repeats.
+#'    \item IRA_len: length of the inverted repeats A.
+#'    \item IRB_len: length of the inverted repeats B.
 #'    \item gene_len: length of the genome.
 #' }
 get_ir_positions <- function(ir_table, genome_length){
+  print(ir_table)
   IRA <- ir_table[ir_table$name == 'IRA', ]
   IRB <- ir_table[ir_table$name == 'IRB', ]
   
   if(nrow(IRA) == 1) {
     IRA_start <- IRA$start #+ 1
-    IR_len <- as.numeric(IRA$length)
+    IRA_len <- as.numeric(IRA$length)
   } else {
     IRA_start <- IRA$start[2] #+ 1
-    IR_len <- as.numeric(IRA$length[1])
+    IRA_len <- as.numeric(IRA$length[1])
   }
   
   if(nrow(IRB) == 1) {
     IRB_start <- IRB$start #+ 1
+    IRB_len <- as.numeric(IRB$length)
   } else {
     IRB_start <- IRB$start[2] #+ 1
+    IRB_len <- as.numeric(IRB$length[1])
   }
   
-  print('IRA start, IRB start, IR length, genome length:')
-  print(c(IRA_start, IRB_start, IR_len, genome_length))
-  return(c(IRA_start, IRB_start, IR_len, genome_length))
+  print('IRA start, IRB start, IRA length, IRB length, genome length:')
+  print(c(IRA_start, IRB_start, IRA_len, IRB_len, genome_length))
+  return(c(IRA_start, IRB_start, IRA_len, IRB_len, genome_length))
 }
 
 #' Generate information for the IR region.

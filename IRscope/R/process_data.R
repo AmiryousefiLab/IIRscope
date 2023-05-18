@@ -82,7 +82,7 @@ IRs<- function(gbfiles, Sfiles, progress){
     spnames[[i]]<<- sp.name(gb.data)
     
     FasList[[i]]<<- rdnFixer(gb.data)
-    nuclw[i]<<- 100/IRList[[i]][4]
+    nuclw[i]<<- 100/IRList[[i]][5]
     
     # getting genelist in dogma format
     GeneList[[i]]<<- trnfixer(GeneList[[i]])
