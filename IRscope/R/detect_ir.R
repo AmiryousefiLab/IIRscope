@@ -34,9 +34,9 @@ get_ir <- function(genome){
   }, warning = function(w) {
     ir <<- irDetect(genome, seed.size = 1000)
   })
-  
-  print('Indel table:')
-  print(ir$indel_table)
+
+  print("IR and indel table:")
+  print(ir)
   return(ir)
 }
 
@@ -54,10 +54,9 @@ get_ir <- function(genome){
 #'    \item gene_len: length of the genome.
 #' }
 get_ir_positions <- function(ir_table, genome_length){
-  print(ir_table)
   IRA <- ir_table[ir_table$name == 'IRA', ]
   IRB <- ir_table[ir_table$name == 'IRB', ]
-  
+
   if(nrow(IRA) == 1) {
     IRA_start <- IRA$start #+ 1
     IRA_len <- as.numeric(IRA$length)
@@ -65,7 +64,7 @@ get_ir_positions <- function(ir_table, genome_length){
     IRA_start <- IRA$start[2] #+ 1
     IRA_len <- as.numeric(IRA$length[1])
   }
-  
+
   if(nrow(IRB) == 1) {
     IRB_start <- IRB$start #+ 1
     IRB_len <- as.numeric(IRB$length)
@@ -73,7 +72,7 @@ get_ir_positions <- function(ir_table, genome_length){
     IRB_start <- IRB$start[2] #+ 1
     IRB_len <- as.numeric(IRB$length[1])
   }
-  
+
   print('IRA start, IRB start, IRA length, IRB length, genome length:')
   print(c(IRA_start, IRB_start, IRA_len, IRB_len, genome_length))
   return(c(IRA_start, IRB_start, IRA_len, IRB_len, genome_length))
@@ -183,11 +182,11 @@ irDetect <- function(genome, seed.size = 1000) {
   irb_len <- irb_e - irb_s + 1
   lsc_len <- ira_s - 1 + l - irb_e
   ssc_len <- irb_s - ira_e - 1
-  
+
   if (abs(ira_len - irb_len) > 1000){
     warning("The difference between IR regions is larger than 1000 bp")
   }
-  
+
   # Detecting indels and replaces in IR-----------------------------------------
 
   if (nrow(pos) > 3){
@@ -217,7 +216,7 @@ irDetect <- function(genome, seed.size = 1000) {
       stop("The IR regions are not in similar length and no indel was detected")
     }
   }
-  
+
   # recover original coordinates (0-base)
   if (tick == 0) {
     ir_table <- data.frame(chr = rep("chr1", 5),
@@ -272,7 +271,7 @@ irDetect <- function(genome, seed.size = 1000) {
                                       paste("IRA:", ira_len),
                                       paste("SSC:", ssc_len),
                                       paste("IRB:", irb_len)),
-                             length = c(lsc_len, irb_len, ssc_len, irb_len),
+                             length = c(lsc_len, ira_len, ssc_len, irb_len),
                              stringsAsFactors = FALSE)
     } else {
       ir_table <- data.frame(chr = rep ("chr1", 5),
@@ -286,7 +285,7 @@ irDetect <- function(genome, seed.size = 1000) {
                                       paste("IRA:", ira_len),
                                       paste("SSC:", ssc_len),
                                       ""),
-                             length = c(irb_len, lsc_len, irb_len, ssc_len, ''),
+                             length = c(irb_len, lsc_len, ira_len, ssc_len, ''),
                              stringsAsFactors = FALSE)
     }
   }
