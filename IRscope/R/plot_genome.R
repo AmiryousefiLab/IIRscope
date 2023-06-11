@@ -298,7 +298,7 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
       if (is.null(txt)){
         txt <- paste(txt, paste0(nmis, '-'))
       } else {
-        txt <- paste(txt, paste0(nmis, '-'), sep = ', ')
+        txt <- paste(txt, paste0(nmis, '-'), sep = ' ')
       }
     }
     if(is.element('insert', mismatches)){
@@ -306,10 +306,10 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
       if (is.null(txt)){
         txt <- paste(txt, paste0(nmis, '+'))
       } else {
-        txt <- paste(txt, paste0(nmis, '+'), sep = ', ')
+        txt <- paste(txt, paste0(nmis, '+'), sep = ' ')
       }
     }
-    points(half_ir_plotdist+pc, track*5+2.5+5, cex=0.5, 
+    points(half_ir_plotdist+pc, track*5+2.2+5, cex=0.5, 
            pch=6, col=theme$midmis.color, lwd=0.4)
     text(half_ir_plotdist+pc, track*5+4.5, txt, cex=0.25, font=4)
     segments(half_ir_plotdist+pc, track*5+7, half_ir_plotdist+pc,
@@ -351,7 +351,7 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
       }
       
       x0 <- min(max(ins_aux$Pcord, pc-10), pc+10)
-      points(x0, track*5+2.5+5, cex=0.5, 
+      points(x0, track*5+2.2+5, cex=0.5, 
              pch=ins_aux$pch, bg=ins_aux$col, lwd=0.4)
       # text(x0, track*5+1.6+5, 
       #      paste(ins_aux$position, ins_aux$string), 
