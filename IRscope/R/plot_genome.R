@@ -309,8 +309,8 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
         txt <- paste(txt, paste0(nmis, '+'), sep = ' ')
       }
     }
-    points(half_ir_plotdist+pc, track*5+2.2+5, cex=0.5, 
-           pch=6, col=theme$midmis.color, lwd=0.4)
+    points(half_ir_plotdist+pc, track*5+2.2+5, cex=0.4, 
+           pch=6, col=theme$midmis.color, lwd=0.3)
     text(half_ir_plotdist+pc, track*5+4.5, txt, cex=0.25, font=4)
     segments(half_ir_plotdist+pc, track*5+7, half_ir_plotdist+pc,
              track*5+5.1, lty='dashed', lwd=0.4, col = theme$misline.color)
@@ -351,13 +351,13 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
       }
       
       x0 <- min(max(ins_aux$Pcord, pc-10), pc+10)
-      points(x0, track*5+2.2+5, cex=0.5, 
-             pch=ins_aux$pch, bg=ins_aux$col, lwd=0.4)
+      points(x0, track*5+2.2+5, cex=0.4, 
+             pch=ins_aux$pch, bg=ins_aux$col, lwd=0.3)
       # text(x0, track*5+1.6+5, 
       #      paste(ins_aux$position, ins_aux$string), 
       #      cex=0.4, col='black', pos=3)
       segments(x0, track*5+7, x0, 
-               track*5+5.2, lty='dashed', lwd=0.4, col = theme$misline.color)
+               track*5+5.1, lty='dashed', lwd=0.4, col = theme$misline.color)
     }
   }
 }
