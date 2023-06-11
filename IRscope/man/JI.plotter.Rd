@@ -4,10 +4,10 @@
 \alias{JI.plotter}
 \title{Junction site indel plotter}
 \usage{
-JI.plotter(Radius, J.pos, track, jlens, theme)
+JI.plotter(radius_list, J.pos, track, jlens, theme)
 }
 \arguments{
-\item{Radius}{number with the radius wanted.}
+\item{radius_list}{list with the calculated radius for the species.}
 
 \item{J.pos}{The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
 and 4 respectively.}

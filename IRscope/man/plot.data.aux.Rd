@@ -4,10 +4,10 @@
 \alias{plot.data.aux}
 \title{Plotting data auxiliar function}
 \usage{
-\method{plot}{data.aux}(radius, J.pos, l, jlens, theme)
+\method{plot}{data.aux}(radius_list, J.pos, l, jlens, theme)
 }
 \arguments{
-\item{radius}{list with the calculated radius for the species and the junction.}
+\item{radius_list}{list with the calculated radius for the species.}
 
 \item{J.pos}{The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
 and 4 respectively.}

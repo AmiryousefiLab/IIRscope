@@ -248,7 +248,7 @@ JunctRadiusIndelFinder<- function(indel_table, IRinfo, J.pos, radius){
 #' 
 #' Plotting the indel mismatches.
 #' 
-#' @param Radius number with the radius wanted. 
+#' @param radius_list list with the calculated radius for the species.
 #' @param J.pos The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
 #' and 4 respectively.
 #' @param track The track on which the genes are to be plotted, starting from the 
@@ -257,7 +257,8 @@ JunctRadiusIndelFinder<- function(indel_table, IRinfo, J.pos, radius){
 #' in the same order as J.pos: jlb.len, jsb.len, jsa.len, jla.len.
 #' @param theme dataframe with the colors chosen on the web.
 #' @return None.
-JI.plotter<- function(Radius, J.pos, track, jlens, theme){
+JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
+  Radius <- radius_list[[J.pos]][track]
   indel_table <- IndelList[[track]]
   ir_info <- IRList[[track]]
   mid_inside <- NULL
@@ -266,14 +267,16 @@ JI.plotter<- function(Radius, J.pos, track, jlens, theme){
   if(J.pos==1){
     pc<-jlens$jlb.len
     J<- ir_info[1]
-    mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[3] - Radius))
+    Radius2 <- radius_list[[2]][track]
+    mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[3] - Radius2))
   } else if(J.pos==2){
     pc<-jlens$jsb.len
     J<- ir_info[1]+ir_info[3]
   } else if(J.pos==3){
     pc<-jlens$jsa.len
     J<- ir_info[2]
-    mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[4] - Radius))
+    Radius4 <- radius_list[[4]][track]
+    mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[4] - Radius4))
   } else if(J.pos==4){
     pc<-jlens$jla.len
     J<- ir_info[2]+ir_info[4]
@@ -791,7 +794,7 @@ SSC<- function(IRinfo){
 #' Calls all the needed functions to plot the information. It dies it for all
 #' the species.
 #' 
-#' @param radius list with the calculated radius for the species and the junction.
+#' @param radius_list list with the calculated radius for the species.
 #' @param J.pos The position of the J site: JLB, JSB, JSA, and JLA for 1,2,3, 
 #' and 4 respectively.
 #' @param l number of species.
@@ -799,10 +802,11 @@ SSC<- function(IRinfo){
 #' in the same order as J.pos: jlb.len, jsb.len, jsa.len, jla.len.
 #' @param theme dataframe with the colors chosen on the web.
 #' @return None.
-plot.data.aux <- function(radius, J.pos, l, jlens, theme){
+plot.data.aux <- function(radius_list, J.pos, l, jlens, theme){
+  radius <- radius_list[[J.pos]]
   for (i in 1:l){
     if(!all(is.na(IndelList[[i]]))){
-      JI.plotter(radius[i], J.pos, i, jlens, theme)
+      JI.plotter(radius_list, J.pos, i, jlens, theme)
     }
   }
   for (i in 1:l){JG.plotter(radius[i], J.pos, i, jlens, theme)}
@@ -912,11 +916,13 @@ IRs2<- function(file="IR_out", theme, sample = FALSE){
     III<- Max.Radius(3, l_aux, genelist = GeneList, irlist = IRList)
     IV<-  Max.Radius(4, l_aux, genelist = GeneList, irlist = IRList)
     
+    radius_list <- list(I, II, III, IV)
+    
     # plot genes and information around the junction
-    plot.data.aux(I, 1, l_aux, jlens, theme)
-    plot.data.aux(II, 2, l_aux, jlens, theme)
-    plot.data.aux(III, 3, l_aux, jlens, theme)
-    plot.data.aux(IV, 4, l_aux, jlens, theme)
+    plot.data.aux(radius_list, 1, l_aux, jlens, theme)
+    plot.data.aux(radius_list, 2, l_aux, jlens, theme)
+    plot.data.aux(radius_list, 3, l_aux, jlens, theme)
+    plot.data.aux(radius_list, 4, l_aux, jlens, theme)
     
   } else {
     # See for which samples IR was not found and print that on the plot.
