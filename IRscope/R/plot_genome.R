@@ -192,7 +192,7 @@ JG.plotter<- function(Radius, J.pos, track, jlens, theme){
   for (i in 1:n){
     x1 <- max(Pcord[i,1], pc-10)
     x2 <- min(Pcord[i,2], pc+10)
-    if(tup[i,4] == '-'){
+    if(tup[i,4] == '+'){ # + on top, - on the bottom (Modified BW: 30.06.23)
       for (j in seq(0.10, 0.70, 0.05)){
         segments(x1, track*5+j+5, x2, track*5+j+5, lwd=1, col=paste(gcol(tup)[i]))
       }
@@ -256,8 +256,9 @@ JunctRadiusIndelFinder<- function(indel_table, IRinfo, J.pos, radius){
 #' @param jlens named list with the distance in the plot for the junction sites, 
 #' in the same order as J.pos: jlb.len, jsb.len, jsa.len, jla.len.
 #' @param theme dataframe with the colors chosen on the web.
+#' @param do_radius boolean, use the conjuction radius
 #' @return None.
-JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
+JI.plotter<- function(radius_list, J.pos, track, jlens, theme, do_radius=FALSE){
   Radius <- radius_list[[J.pos]][track]
   indel_table <- IndelList[[track]]
   ir_info <- IRList[[track]]
@@ -265,10 +266,15 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
   half_ir_plotdist <- (jlens$jsb.len - jlens$jlb.len)/2
   
   if(J.pos==1){
-    pc<-jlens$jlb.len
-    J<- ir_info[1]
+    pc <- jlens$jlb.len
+    J <- ir_info[1]
     Radius2 <- radius_list[[2]][track]
-    mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[3] - Radius2))
+    if(do_radius){
+      mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[3] - Radius2))
+    }else{
+      mid_inside <- subset(indel_table, position > (J ) & position < (J+ir_info[3] ))  
+    }
+    
   } else if(J.pos==2){
     pc<-jlens$jsb.len
     J<- ir_info[1]+ir_info[3]
@@ -276,7 +282,12 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
     pc<-jlens$jsa.len
     J<- ir_info[2]
     Radius4 <- radius_list[[4]][track]
-    mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[4] - Radius4))
+    if(do_radius){
+      mid_inside <- subset(indel_table, position > (J + Radius) & position < (J+ir_info[4] - Radius4))  
+    }else{
+      mid_inside <- subset(indel_table, position > (J ) & position < (J+ir_info[4] ))  
+    }
+    
   } else if(J.pos==4){
     pc<-jlens$jla.len
     J<- ir_info[2]+ir_info[4]
@@ -289,11 +300,16 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
   if(NROW(mid_inside) > 0){
     mismatches <- unique(mid_inside$mismatch_type)
     txt <- NULL
+    flag_snp = 0
+    flag_del = 0
+    flag_ins = 0
     if(is.element('replace', mismatches)){
+      flag_snp = 1
       nmis <- nrow(subset(mid_inside, mismatch_type == 'replace'))
       txt <- paste(txt, paste0(nmis, '/'))
     }
     if(is.element('delete', mismatches)){
+      flag_del = 1 
       nmis <- nrow(subset(mid_inside, mismatch_type == 'delete'))
       if (is.null(txt)){
         txt <- paste(txt, paste0(nmis, '-'))
@@ -302,16 +318,25 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme){
       }
     }
     if(is.element('insert', mismatches)){
+      flag_ins = 1
       nmis <- nrow(subset(mid_inside, mismatch_type == 'insert'))
       if (is.null(txt)){
         txt <- paste(txt, paste0(nmis, '+'))
       } else {
-        txt <- paste(txt, paste0(nmis, '+'), sep = ' ')
+        if(flag_snp == 1 & flag_del==0){
+          txt <- paste(txt, paste0(nmis, '+'), sep = ' ')
+        }
+        else{
+          txt <- paste(txt, paste0(nmis, '+'), sep = ' ')
+        }
       }
     }
+    ######### Added BW 06.07.23
+    # Automatic sizing of text for number of sns and indels
+    cex_txt = 0.40 - (flag_snp+flag_del+flag_ins)*0.05
     points(half_ir_plotdist+pc, track*5+2.2+5, cex=0.4, 
            pch=6, col=theme$midmis.color, lwd=0.3)
-    text(half_ir_plotdist+pc, track*5+4.5, txt, cex=0.25, font=4)
+    text(half_ir_plotdist+pc, track*5+4.5, txt, cex=cex_txt, font=4)
     segments(half_ir_plotdist+pc, track*5+7, half_ir_plotdist+pc,
              track*5+5.1, lty='dashed', lwd=0.4, col = theme$misline.color)
   } else if(J.pos == 1 | J.pos == 3) {
@@ -418,7 +443,7 @@ GN.plotter<- function(Radius, J.pos, track, jlens, theme){
     }
     x1 <- max(Pcord[i,1], pc-10)
     x2 <- min(Pcord[i,2], pc+10)
-    if(tup[i,4] == '-'){ #up
+    if(tup[i,4] == '+'){ # top Modified BW (26.06.23)
       if (min(x1, x2) >= 104){
         text(103.5, track*5+1.05+5, tup[i,1], cex=txtcex, col=txtout.color, font=txtfont) #todo aqui
       }
@@ -505,7 +530,7 @@ OJ.plotter <- function(Radius, J.pos, track, jlens){
     x2 <- min(Pcord[i,2], pc+10)
     if ((Rcord[i,2] > J & Rcord[i,1] <J) | 
         (Rcord[i,2] < Rcord[i,1] & (Rcord[i,2] - ir_info[5]) < J & Rcord[i,1] >J)){
-      if(tup[i,4] == '-'){
+      if(tup[i,4] == '+'){
         if (abs(x1-x2) < 3){ #space too small, they appear upper to not be on the same place as the gene name
           y0_arrow <- track*5+1.5+5
           y0_txt <- track*5+1.8+5
@@ -613,10 +638,10 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
     dist_bp_right <- Rcord[row.cor, 1]-J
     dist_bp_left <- J-Rcord[row.cor, 2]
     # TODO: Adjust distances to the arrows with their size
-    #offset_dist_bp_right <- n_int_digits(dist_bp_right) - 2 #+
+    #offset_dist_bp_right <- n_int_digits(dist_bpF_right) - 2 #+
     #offset_dist_bp_left <- n_int_digits(dist_bp_left) - 2 #-
 
-    if (tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2 - x1 > 3){#top,right, big
+    if (tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2 - x1 > 3){#top,right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5+1.3+5), 
                   curve = -0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -624,14 +649,14 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 5, track*5+1.3+0.2+5, 
            paste(dist_bp_right, "bp"), cex=cex_txt)
     }
-    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3 ) {#top, right, small
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3 ) {#top, right, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5 , 
              pc+(Pcord[row.cor, col.cor]-pc)/2 -2 , track*5+1.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 5.5, track*5+1.3+0.2+5, 
            paste(dist_bp_right, "bp"), cex=cex_txt)
     }
-    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 > 3) {#low, right, big
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 > 3) {#low, right, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5), 
                   curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -639,14 +664,14 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 5, track*5-2.3-0.2+5, 
            paste(dist_bp_right, "bp"), cex=cex_txt)
     }
-    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3) {#low, right, small
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] < 0 & x2-x1 <= 3) {#low, right, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 -3, track*5-2.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 -5.5 + 1, track*5-2.3-0.2+5, 
            paste(dist_bp_right, "bp"), cex=cex_txt)
     }
-    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#low, left, big
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#low, left, big
       curvedarrow (from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5), 
                    to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 - 3, track*5-2.3+5), 
                    curve = -0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -654,14 +679,14 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4, track*5-2.3-0.2+5, 
            paste(dist_bp_left, "bp"), cex=cex_txt)
     }
-    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#low, left, small
+    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#low, left, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5-1.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 + 3, track*5-2.3+5, angle = 15, 
              length = 0.05, lwd=0.6)
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 + 4.5, track*5-2.3-0.2+5, 
            paste(dist_bp_left, "bp"), cex=cex_txt)
     }
-    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#top, left, big
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 > 3) {#top, left, big
       curvedarrow(from=c(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5), 
                   to=c(pc+(Pcord[row.cor, col.cor]-pc)/2 - 3, track*5+1.3+5), 
                   curve = 0.21, lwd=0.6, arr.type = "curved", arr.col = "white", 
@@ -669,7 +694,7 @@ JD.plotter <- function(Radius, J.pos, track, jlens){
       text(pc+(Pcord[row.cor, col.cor]-pc)/2 - 4.5, track*5+1.3+0.2+5, 
            paste(dist_bp_left, "bp"), cex=cex_txt)
     }
-    else if(tup[row.cor, 4] == '-' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#top, left, small
+    else if(tup[row.cor, 4] == '+' & pc-Pcord[row.cor, col.cor] > 0 & x2-x1 <= 3) {#top, left, small
       arrows(pc+(Pcord[row.cor, col.cor]-pc)/2, track*5+0.3+5, 
              pc+(Pcord[row.cor, col.cor]-pc)/2 + 2 , track*5+1.3+5, angle = 15, 
              length = 0.05, lwd=0.6)

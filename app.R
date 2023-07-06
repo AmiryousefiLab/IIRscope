@@ -917,7 +917,7 @@ server <- function(input, output, session) {
   })
   
   
-  # Downloading the result with the Download botton in the GB files section
+  # Downloading the result with the Download button in the GB files section
   output$downloadData <- downloadHandler(
     filename = function(){
       return(paste('IR', input$file_type, sep="."))
@@ -932,6 +932,7 @@ server <- function(input, output, session) {
                                            width = 8.3, height = (l+2)*8.3/12,
                                            units = "in", res = 300))
       }
+      
       IRs2(file = file, theme = theme$data)
       while (!is.null(dev.list())) dev.off()
       removeNotification(id = "message")

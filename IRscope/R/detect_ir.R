@@ -393,13 +393,28 @@ detect_mismatch <- function(ira_seq, irb_seq, ira_s, irb_s, other_letter){
                         stringsAsFactors = FALSE)
       insert_a <- rbind.data.frame(insert_a, tmp)
     }
-
-    delete_table_b <- suppressWarnings(data.frame(Biostrings::deletion(ir_map_b))) %>%
-      dplyr::mutate(position = start + irb_s - 1) %>%
-      dplyr::mutate(string = rep("D", n())) %>%
-      dplyr::mutate(mismatch_type = rep("delete", n())) %>%
-      dplyr::mutate(col = rep("yellow", n())) %>%
-      dplyr::select(mismatch_type, position, string, col)
+    ### Old Code
+    # delete_table_b <- suppressWarnings(data.frame(Biostrings::deletion(ir_map_b))) %>%
+    #   dplyr::mutate(position = start + irb_s - 1) %>%
+    #   dplyr::mutate(string = rep("D", n())) %>%
+    #   dplyr::mutate(mismatch_type = rep("delete", n())) %>%
+    #   dplyr::mutate(col = rep("yellow", n())) %>%
+    #   dplyr::select(mismatch_type, position, string, col)
+    
+    ### Suggested correction BW 26.06.23
+    delete_table_b <- suppressWarnings(data.frame(Biostrings::deletion(ir_map_b))) %>% 
+      dplyr::mutate(string = rep("D", n())) 
+    delete_b <- NULL
+    for (i in 1:nrow(delete_table_b)){
+      tmp <- data.frame(mismatch_type = rep("delete", delete_table_b$width[i]),
+                        position = seq(delete_table_b$start[i]+irb_s - 1,
+                                       delete_table_b$end[i]+irb_s - 1),
+                        string = strsplit(delete_table_b$string[i], "")[[1]],
+                        col = rep("green", delete_table_b$width[i]),
+                        stringsAsFactors = FALSE)
+      delete_b <- rbind.data.frame(delete_b, tmp)
+    }
+    delete_table_b = delete_b
   } else {
     insert_a <- NULL
     delete_table_b <- NULL
@@ -431,13 +446,29 @@ detect_mismatch <- function(ira_seq, irb_seq, ira_s, irb_s, other_letter){
       insert_b <- rbind.data.frame(insert_b, tmp)
     }
 
-
-    delete_table_a <- suppressWarnings(data.frame(Biostrings::deletion(ir_map_a))) %>%
-      dplyr::mutate(position = start + ira_s - 1) %>%
-      dplyr::mutate(string = rep("D", n())) %>%
-      dplyr::mutate(mismatch_type = rep("delete", n())) %>%
-      dplyr::mutate(col = rep("yellow", n())) %>%
-      dplyr::select(mismatch_type, position, string, col)
+    ### Old code
+    # delete_table_a <- suppressWarnings(data.frame(Biostrings::deletion(ir_map_a))) %>%
+    #   dplyr::mutate(position = start + ira_s - 1) %>%
+    #   dplyr::mutate(string = rep("D", n())) %>%
+    #   dplyr::mutate(mismatch_type = rep("delete", n())) %>%
+    #   dplyr::mutate(col = rep("yellow", n())) %>%
+    #   dplyr::select(mismatch_type, position, string, col)
+    
+    ### Suggested correction BW 25.06.23
+    delete_table_a <- suppressWarnings(data.frame(Biostrings::deletion(ir_map_a))) %>% 
+      dplyr::mutate(string = rep("D", n())) 
+    delete_a <- NULL
+    for (i in 1:nrow(insert_table_b)){
+      tmp <- data.frame(mismatch_type = rep("delete", delete_table_a$width[i]),
+                        position = seq(delete_table_a$start[i]+ira_s - 1,
+                                       delete_table_a$end[i]+ira_s - 1),
+                        string = strsplit(delete_table_a$string[i], "")[[1]],
+                        col = rep("green", delete_table_a$width[i]), # revise this line
+                        stringsAsFactors = FALSE)
+      delete_a <- rbind.data.frame(delete_a, tmp)
+    }
+    delete_table_a = delete_a
+    
   } else{
     insert_b <- NULL
     delete_table_a <- NULL
