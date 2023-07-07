@@ -308,32 +308,42 @@ JI.plotter<- function(radius_list, J.pos, track, jlens, theme, do_radius=FALSE){
       nmis <- nrow(subset(mid_inside, mismatch_type == 'replace'))
       txt <- paste(txt, paste0(nmis, '/'))
     }
-    if(is.element('delete', mismatches)){
+    # print indel counts in the following format 2/15- 10+ and 2/15+ 10-
+    if(J.pos<=2){
+      element_order = c("delete", "insert")  
+      symbol_order = c("-","+")
+    }else{
+      element_order = c("insert", "delete")  
+      symbol_order = c("+","-")
+    }
+    
+    if(is.element(element_order[1], mismatches)){
       flag_del = 1 
-      nmis <- nrow(subset(mid_inside, mismatch_type == 'delete'))
+      nmis <- nrow(subset(mid_inside, mismatch_type == element_order[1]))
       if (is.null(txt)){
-        txt <- paste(txt, paste0(nmis, '-'))
+        txt <- paste(txt, paste0(nmis, symbol_order[1]))
       } else {
-        txt <- paste(txt, paste0(nmis, '-'), sep = ' ')
+        txt <- paste(txt, paste0(nmis, symbol_order[1]), sep = ' ')
       }
     }
-    if(is.element('insert', mismatches)){
+    if(is.element(element_order[2], mismatches)){
       flag_ins = 1
-      nmis <- nrow(subset(mid_inside, mismatch_type == 'insert'))
+      nmis <- nrow(subset(mid_inside, mismatch_type == element_order[2]))
       if (is.null(txt)){
-        txt <- paste(txt, paste0(nmis, '+'))
+        txt <- paste(txt, paste0(nmis, symbol_order[2]))
       } else {
         if(flag_snp == 1 & flag_del==0){
-          txt <- paste(txt, paste0(nmis, '+'), sep = ' ')
+          txt <- paste(txt, paste0(nmis, symbol_order[2]), sep = ' ')
         }
         else{
-          txt <- paste(txt, paste0(nmis, '+'), sep = ' ')
+          txt <- paste(txt, paste0(nmis, symbol_order[2]), sep = ' ')
         }
       }
     }
     ######### Added BW 06.07.23
     # Automatic sizing of text for number of sns and indels
     cex_txt = 0.40 - (flag_snp+flag_del+flag_ins)*0.05
+    ####################
     points(half_ir_plotdist+pc, track*5+2.2+5, cex=0.4, 
            pch=6, col=theme$midmis.color, lwd=0.3)
     text(half_ir_plotdist+pc, track*5+4.5, txt, cex=cex_txt, font=4)
